@@ -1,0 +1,7 @@
+{
+    "sdk": {
+        "runtime": "coreclr",
+        "architecture": "x64"
+    },
+    "projects": [ "src", "test" ]
+}
