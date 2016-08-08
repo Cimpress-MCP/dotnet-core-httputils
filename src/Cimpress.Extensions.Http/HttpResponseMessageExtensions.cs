@@ -24,11 +24,26 @@ namespace Cimpress.Extensions.Http
             }
         }
 
+        public static async Task ThrowIfNotSuccessStatusCode(this HttpResponseMessage message)
+        {
+            if (!message.IsSuccessStatusCode)
+            {
+                var formattedMsg = await FormatErrorMessage(message);
+                throw new Exception(formattedMsg);
+            }
+        }
+
         public static async Task<string> LogMessage(HttpResponseMessage message, ILogger logger)
+        {
+            string formattedMsg = await message.FormatErrorMessage();
+            logger.LogError(formattedMsg);
+            return formattedMsg;
+        }
+
+        public static async Task<string> FormatErrorMessage(this HttpResponseMessage message)
         {
             var msg = await message.Content.ReadAsStringAsync();
             var formattedMsg = $"Error processing request. Status code was {message.StatusCode} when calling '{message.RequestMessage.RequestUri}', message was '{msg}'";
-            logger.LogError(formattedMsg);
             return formattedMsg;
         }
     }
