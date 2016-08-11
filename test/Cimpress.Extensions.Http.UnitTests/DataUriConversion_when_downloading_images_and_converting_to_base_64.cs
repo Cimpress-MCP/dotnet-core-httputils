@@ -29,7 +29,7 @@ namespace Cimpress.Extensions.Http.UnitTests
         public void Does_not_throw()
         {
             // execute
-            Func<Task> func = async () => await "http://foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, new HttpUtilsTestMessageHandler());
+            Func<Task> func = async () => await "http://foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, "image/unittest", new HttpUtilsTestMessageHandler());
 
             // verify
             func.ShouldNotThrow();
@@ -40,7 +40,7 @@ namespace Cimpress.Extensions.Http.UnitTests
         {
             // execute
             var mediaType = "image/foo";
-            var result = await "http://foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, new HttpUtilsTestMessageHandler(HttpStatusCode.OK, mediaType));
+            var result = await "http://foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, "image/unittest", new HttpUtilsTestMessageHandler(HttpStatusCode.OK, mediaType));
 
             // verify
             result.Should().StartWith($"data:{mediaType};base64,");
@@ -50,7 +50,7 @@ namespace Cimpress.Extensions.Http.UnitTests
         public async Task Converts_data_to_base64()
         {
             // execute
-            var result = await "http://foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, new HttpUtilsTestMessageHandler());
+            var result = await "http://foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, "image/unittest", new HttpUtilsTestMessageHandler());
 
             // verify
             var data = Convert.ToBase64String(Enumerable.Range(0, 100).Select(x => (byte) x).ToArray());
@@ -67,7 +67,7 @@ namespace Cimpress.Extensions.Http.UnitTests
             fileInfo.Setup(s => s.CreateReadStream()).Returns(new MemoryStream());
 
             // execute
-            await url.DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, new HttpClientHandler());
+            await url.DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, "image/unittest", new HttpClientHandler());
 
             // verify
             fileInfo.Verify(s => s.CreateReadStream(), Times.Once);
@@ -80,7 +80,7 @@ namespace Cimpress.Extensions.Http.UnitTests
             fileInfo.Setup(s => s.CreateReadStream()).Returns(new MemoryStream());
 
             // execute
-            await "foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, new HttpUtilsTestMessageHandler());
+            await "foo".DownloadImageAndConvertToDataUri(logger.Object, fileInfo.Object, "image/unittest", new HttpUtilsTestMessageHandler());
 
             // verify
             fileInfo.Verify(s => s.CreateReadStream(), Times.Once);
