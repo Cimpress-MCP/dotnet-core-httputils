@@ -63,7 +63,7 @@ namespace Cimpress.Extensions.Http
         /// <summary>
         /// Converts a stream to a data URL.
         /// </summary>
-        /// <param name="stream">The stream which content should be converted to a Data URI format.</param>
+        /// <param name="stream">The stream which provides the content for the data URI.</param>
         /// <param name="mediaType">The media type of the stream.</param>
         /// <returns>A string that contains the data uri of the stream's content.</returns>
         public static async Task<string> ToDataUri(this Stream stream, string mediaType)
@@ -79,12 +79,23 @@ namespace Cimpress.Extensions.Http
         /// <summary>
         /// Converts a byte array to a data URL.
         /// </summary>
-        /// <param name="data">The data that should be converted.</param>
+        /// <param name="data">The data that should be converted to base64 and included in the data URI.</param>
         /// <param name="mediaType">The media type of the content.</param>
         /// <returns>A string that contains the data uri of the provided data.</returns>
         public static string ToDataUri(this byte[] data, string mediaType)
         {
-            return $"data:{mediaType};base64,{Convert.ToBase64String(data)}";
+            return Convert.ToBase64String(data).ToDataUri(mediaType);
+        }
+
+        /// <summary>
+        /// Converts a byte array to a data URL.
+        /// </summary>
+        /// <param name="base64String">The base64 encoded string that represents the data.</param>
+        /// <param name="mediaType">The media type of the content.</param>
+        /// <returns>A string that contains the data uri of the provided data.</returns>
+        public static string ToDataUri(this string base64String, string mediaType)
+        {
+            return $"data:{mediaType};base64,{base64String}";
         }
     }
 }

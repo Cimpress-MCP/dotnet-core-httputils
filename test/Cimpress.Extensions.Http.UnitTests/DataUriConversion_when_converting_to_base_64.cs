@@ -55,6 +55,16 @@ namespace Cimpress.Extensions.Http.UnitTests
             VerifyResult(result);
         }
 
+        [Fact]
+        public void Converts_string_to_datauri()
+        {
+            // execute
+            var result = rawDataBase64.ToDataUri("image/unittest");
+
+            // verify
+            VerifyResult(result);
+        }
+
         private static MemoryStream SetupMemoryStream()
         {
             byte[] data = rawDataToConvert.ToCharArray().Select(Convert.ToByte).ToArray();
