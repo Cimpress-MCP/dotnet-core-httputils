@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 using Cimpress.Extensions.Http.Caching.Abstractions;
 using Cimpress.Extensions.Http.Caching.InMemory;
@@ -27,6 +28,10 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.Examples
                     Debug.WriteLine($" completed in {sw.ElapsedMilliseconds}ms. Content was {content}.");
                 }
             }
+
+            StatsResult stats = handler.StatsProvider.GetStatistics();
+            stats.Total.CacheHit.Should().Be(4);
+            stats.Total.CacheMiss.Should().Be(1);
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new MemoryCache(new MemoryCacheOptions());
-            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, cache));
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, null, cache));
 
             // execute twice
             await client.GetAsync("http://unittest");
@@ -47,7 +47,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new MemoryCache(new MemoryCacheOptions());
-            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, cache));
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, null, cache));
 
             // execute for different URLs, only different by casing
             await client.GetAsync("http://unittest/foo.html");
@@ -63,7 +63,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new MemoryCache(new MemoryCacheOptions());
-            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, cache));
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, null, cache));
 
             // execute for different URLs
             await client.GetAsync("http://unittest1");
@@ -79,7 +79,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new MemoryCache(new MemoryCacheOptions());
-            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, cache));
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, null, cache));
 
             // execute twice for different methods
             await client.PostAsync("http://unittest", new StringContent(string.Empty));
@@ -99,7 +99,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new MemoryCache(new MemoryCacheOptions());
-            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, cache));
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, null, cache));
 
             // execute twice for different methods
             var originalResult = await client.GetAsync("http://unittest");

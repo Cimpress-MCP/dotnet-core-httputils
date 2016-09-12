@@ -14,6 +14,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
     /// </summary>
     public class InMemoryCacheHandler : DelegatingHandler
     {
+        public IStatsProvider StatsProvider { get; }
         private readonly IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode;
         private readonly IMemoryCache responseCache;
 
@@ -22,17 +23,20 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
         /// </summary>
         /// <param name="innerHandler">The inner handler to retrieve the content from on cache misses.</param>
         /// <param name="cacheExpirationPerHttpResponseCode">A mapping of HttpStatusCode to expiration times. If unspecified takes a default value.</param>
-        public InMemoryCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode = null)
-            : this(innerHandler, cacheExpirationPerHttpResponseCode, new MemoryCache(new MemoryCacheOptions())) {}
+        /// <param name="statsProvider">An <see cref="IStatsProvider"/> that records statistic information about the caching behavior.</param>
+        public InMemoryCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode = null, IStatsProvider statsProvider = null)
+            : this(innerHandler, cacheExpirationPerHttpResponseCode, statsProvider, new MemoryCache(new MemoryCacheOptions())) {}
 
         /// <summary>
         /// Used for injecting an IMemoryCache for unit testing purposes.
         /// </summary>
         /// <param name="innerHandler">The inner handler to retrieve the content from on cache misses.</param>
         /// <param name="cacheExpirationPerHttpResponseCode">A mapping of HttpStatusCode to expiration times. If unspecified takes a default value.</param>
+        /// <param name="statsProvider">An <see cref="IStatsProvider"/> that records statistic information about the caching behavior.</param>
         /// <param name="cache">The cache to be used.</param>
-        internal InMemoryCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode, IMemoryCache cache) : base(innerHandler ?? new HttpClientHandler())
+        internal InMemoryCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode, IStatsProvider statsProvider, IMemoryCache cache) : base(innerHandler ?? new HttpClientHandler())
         {
+            this.StatsProvider = statsProvider ?? new StatsProvider(nameof(InMemoryCacheHandler));
             this.cacheExpirationPerHttpResponseCode = cacheExpirationPerHttpResponseCode ?? new Dictionary<HttpStatusCode, TimeSpan>();
             responseCache = cache ?? new MemoryCache(new MemoryCacheOptions());
         }
@@ -47,7 +51,9 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
             CacheData cachedData;
             if (request.Method == HttpMethod.Get && responseCache.TryGetValue(request.RequestUri, out cachedData))
             {
-                return PrepareCachedEntry(request, cachedData);
+                HttpResponseMessage cachedResponse = PrepareCachedEntry(request, cachedData);
+                StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
+                return cachedResponse;
             }
 
             // cache misses need to ask the inner handler for an actual response
@@ -59,7 +65,9 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
                 CacheData entry = await response.ToCacheEntry();
                 TimeSpan absoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode);
                 responseCache.Set(request.RequestUri, entry, absoluteExpirationRelativeToNow);
-                return PrepareCachedEntry(request, entry);
+                HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
+                StatsProvider.ReportCacheMiss(cachedResponse.StatusCode);
+                return cachedResponse;
             }
 
             // returns the original response
