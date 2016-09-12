@@ -1,5 +1,5 @@
 ﻿{
-    "version": "0.0.1",
+  "version": "0.0.1",
     "title": ".Net Core Client Extensions for HTTP",
     "description": ".Net Core Client Extensions for HTTP",
     "authors": [
@@ -22,9 +22,7 @@
     },
 
     "dependencies": {
-        "Cimpress.Extensions.Http.Caching.Abstractions": { "target": "project" },
-        "NETStandard.Library": "1.6.0",
-        "Microsoft.Extensions.Caching.Memory": "1.0.0"
+        "NETStandard.Library": "1.6.0"
     },
 
     "frameworks": {

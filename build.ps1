@@ -4,9 +4,20 @@ function Build-Projects
 
     Push-Location $DirectoryName
     $revision = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "0.0.1" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
-	Set-BuildVersion $DirectoryName $revision
     & dotnet pack -c Release -o ..\..\.\artifacts --version-suffix $revision
     if($LASTEXITCODE -ne 0) { exit 1 }    
+    Pop-Location
+}
+
+function Update-ProjectJson
+{
+    param([string] $DirectoryName)
+
+    $revision = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "0.0.1" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
+	Set-BuildVersion $DirectoryName $revision
+	Set-CachingAbstractionVersion $DirectoryName $revision
+    
+    Push-Location $DirectoryName
     Pop-Location
 }
 
@@ -19,6 +30,23 @@ function Set-BuildVersion
 	$jsonData.version = $revision
     $jsonData | ConvertTo-Json -Depth 999 | Out-File $projectJson
     Write-Host "Set version of $projectJson to $revision"
+}
+
+function Set-CachingAbstractionVersion
+{
+    param([string] $DirectoryName, [string]$revision)
+	
+    $projectJson = Join-Path $DirectoryName "project.json"
+    $projectName = "Cimpress.Extensions.Http.Caching.Abstractions"
+    $jsonData = Get-Content -Path $projectJson -Raw | ConvertFrom-JSON
+    if (Get-Member -inputobject $jsonData.dependencies -name $projectName -Membertype Properties) {
+	    $jsonData.dependencies.$($projectName) = $revision
+        $jsonData | ConvertTo-Json -Depth 999 | Out-File $projectJson
+        Write-Host "Set dependency of $projectName to $revision."
+    } else {
+        Write-Host "No dependency to $projectName."
+    }
+    
 }
 
 function Test-Projects
@@ -35,6 +63,9 @@ Push-Location $PSScriptRoot
 
 # Clean
 if(Test-Path .\artifacts) { Remove-Item .\artifacts -Force -Recurse }
+
+# Modify project.json
+Get-ChildItem -Path .\src -Filter *.xproj -Recurse | ForEach-Object { Update-ProjectJson $_.DirectoryName }
 
 # Package restore
 & dotnet restore --configfile ./nuget.config

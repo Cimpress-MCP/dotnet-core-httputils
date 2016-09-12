@@ -4,7 +4,7 @@ using System.Net;
 using FluentAssertions;
 using Xunit;
 
-namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
+namespace Cimpress.Extensions.Http.Caching.Abstractions.UnitTests
 {
     public class StatusCodeExtensions_when_calculating_cache_expiration
     {

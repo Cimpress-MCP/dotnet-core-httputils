@@ -1,12 +1,12 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Cimpress.Extensions.Http.Caching.InMemory
+namespace Cimpress.Extensions.Http.Caching.Abstractions
 {
     /// <summary>
     /// Extension methods of the HttpResponseMessage that are related to the caching functionality.
     /// </summary>
-    internal static class HttpResponseMessageExtensions
+    public static class HttpResponseMessageExtensions
     {
         /// <summary>
         /// Takes an HttpResponseMessage and converts that to a <see cref="CacheData"/>.
