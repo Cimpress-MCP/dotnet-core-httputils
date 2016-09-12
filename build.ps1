@@ -1,4 +1,14 @@
-function Build-Projects
+function Build-Project
+{
+    param([string] $DirectoryName)
+
+    Push-Location $DirectoryName
+    & dotnet build -c Release
+    if($LASTEXITCODE -ne 0) { exit 1 }    
+    Pop-Location
+}
+
+function Pack-Project
 {
     param([string] $DirectoryName)
 
@@ -49,7 +59,7 @@ function Set-CachingAbstractionVersion
     
 }
 
-function Test-Projects
+function Test-Project
 {
     param([string] $DirectoryName)
 
@@ -71,9 +81,12 @@ Get-ChildItem -Path .\src -Filter *.xproj -Recurse | ForEach-Object { Update-Pro
 & dotnet restore --configfile ./nuget.config
 
 # Build/package
-Get-ChildItem -Path .\src -Filter *.xproj -Recurse | ForEach-Object { Build-Projects $_.DirectoryName }
+Get-ChildItem -Path .\src -Filter *.xproj -Recurse | ForEach-Object { Pack-Project $_.DirectoryName }
+
+# Build examples to ensure they at least build
+Get-ChildItem -Path .\examples -Filter *.xproj -Recurse | ForEach-Object { Build-Project $_.DirectoryName }
 
 # Test
-Get-ChildItem -Path .\test -Filter *.xproj -Recurse | ForEach-Object { Test-Projects $_.DirectoryName }
+Get-ChildItem -Path .\test -Filter *.xproj -Recurse | ForEach-Object { Test-Project $_.DirectoryName }
 
 Pop-Location
