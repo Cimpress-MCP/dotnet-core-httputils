@@ -10,6 +10,7 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
         public StatsResult(string cacheType)
         {
             CacheType = cacheType;
+            PerStatusCode = new Dictionary<HttpStatusCode, StatsValue>();
 
             // using Now instead of UtcNow to make it easier to read in local time, but still including the timezone offset
             StatsCreatedAt = DateTimeOffset.Now;
