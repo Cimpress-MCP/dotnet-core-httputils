@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 using Cimpress.Extensions.Http.Caching.Abstractions;
 using Cimpress.Extensions.Http.Caching.Redis;
@@ -21,7 +22,7 @@ namespace Cimpess.Extensions.Http.Caching.Redis.Examples
             RedisCacheOptions options = new RedisCacheOptions
             {
                 Configuration = "localhost",
-                InstanceName = "example-tests"
+                InstanceName = "example-tests" + Guid.NewGuid() // create a new instance name to ensure a unique key naming to have consistent test results
             };
 
             var handler = new RedisCacheHandler(new HttpClientHandler(), CacheExpirationProvider.CreateSimple(TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(5)), options);
@@ -34,9 +35,12 @@ namespace Cimpess.Extensions.Http.Caching.Redis.Examples
                     var result = await client.GetAsync(url);
                     var content = await result.Content.ReadAsStringAsync();
                     Debug.WriteLine($" completed in {sw.ElapsedMilliseconds}ms. Content was {content}.");
-                    //await Task.Delay(1000);
                 }
             }
+
+            StatsResult stats = handler.StatsProvider.GetStatistics();
+            stats.Total.CacheHit.Should().Be(4);
+            stats.Total.CacheMiss.Should().Be(1);
         }
     }
 }
