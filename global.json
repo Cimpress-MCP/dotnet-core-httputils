@@ -3,5 +3,5 @@
         "runtime": "coreclr",
         "architecture": "x64"
     },
-    "projects": [ "src", "test" ]
+    "projects": [ "src", "test", "examples" ]
 }

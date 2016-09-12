@@ -1,11 +1,11 @@
 using System.Net.Http;
 
-namespace Cimpress.Extensions.Http.Caching.InMemory
+namespace Cimpress.Extensions.Http.Caching.Abstractions
 {
     /// <summary>
     /// The data object that is used to put into the cache.
     /// </summary>
-    internal class CacheData
+    public class CacheData
     {
         public CacheData(byte[] data, HttpResponseMessage cachableResponse)
         {

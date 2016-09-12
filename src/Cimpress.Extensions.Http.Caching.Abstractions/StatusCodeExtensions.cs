@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace Cimpress.Extensions.Http.Caching.InMemory
+namespace Cimpress.Extensions.Http.Caching.Abstractions
 {
     /// <summary>
     /// Extension methods to HttpStatusCode that are related to caching functionality of this library.
     /// </summary>
-    internal static class StatusCodeExtensions
+    public static class StatusCodeExtensions
     {
         /// <summary>
         /// Gets an expiration time for the cache entry.

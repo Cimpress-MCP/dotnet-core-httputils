@@ -1,7 +1,7 @@
 ﻿{
     "version": "0.0.1",
-    "title": "Unit tests for Cimpress.Extensions.Http.Caching.InMemory",
-    "description": "Unit tests for Cimpress.Extensions.Http.Caching.InMemory",
+    "title": "Examples to use Cimpress.Extensions.Http.Caching.Redis",
+    "description": "Examples to use Cimpress.Extensions.Http.Caching.Redis",
     "authors": [
         "Markus Thurner",
         "Amanda Lobel"

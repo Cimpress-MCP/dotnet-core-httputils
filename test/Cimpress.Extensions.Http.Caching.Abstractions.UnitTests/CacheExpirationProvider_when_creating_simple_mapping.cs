@@ -3,7 +3,7 @@ using System.Net;
 using FluentAssertions;
 using Xunit;
 
-namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
+namespace Cimpress.Extensions.Http.Caching.Abstractions.UnitTests
 {
     public class CacheExpirationProvider_when_creating_simple_mapping
     {
