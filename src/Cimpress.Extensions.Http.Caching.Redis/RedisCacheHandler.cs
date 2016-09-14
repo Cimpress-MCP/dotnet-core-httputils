@@ -17,7 +17,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
     {
         public IStatsProvider StatsProvider { get; }
         private readonly IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode;
-        private readonly RedisCache responseCache;
+        private readonly IDistributedCache responseCache;
 
         /// <summary>
         /// Used for injecting an IMemoryCache for unit testing purposes.
@@ -26,11 +26,22 @@ namespace Cimpress.Extensions.Http.Caching.Redis
         /// <param name="cacheExpirationPerHttpResponseCode">A mapping of HttpStatusCode to expiration times. If unspecified takes a default value.</param>
         /// <param name="options">Options to use to connect to Redis.</param>
         /// /// <param name="statsProvider">An <see cref="IStatsProvider"/> that records statistic information about the caching behavior.</param>
-        public RedisCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode, RedisCacheOptions options, IStatsProvider statsProvider = null) : base(innerHandler ?? new HttpClientHandler())
+        public RedisCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode, RedisCacheOptions options,
+            IStatsProvider statsProvider = null) : this(innerHandler, cacheExpirationPerHttpResponseCode, new RedisCache(options), statsProvider) {}
+
+        /// <summary>
+        /// Used internally only for unit testing.
+        /// </summary>
+        /// <param name="innerHandler">The inner handler to retrieve the content from on cache misses.</param>
+        /// <param name="cacheExpirationPerHttpResponseCode">A mapping of HttpStatusCode to expiration times. If unspecified takes a default value.</param>
+        /// <param name="cache">The distributed cache to use.</param>
+        /// /// <param name="statsProvider">An <see cref="IStatsProvider"/> that records statistic information about the caching behavior.</param>
+        internal RedisCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode, IDistributedCache cache,
+            IStatsProvider statsProvider = null) : base(innerHandler ?? new HttpClientHandler())
         {
             this.StatsProvider = statsProvider ?? new StatsProvider(nameof(RedisCacheHandler));
             this.cacheExpirationPerHttpResponseCode = cacheExpirationPerHttpResponseCode ?? new Dictionary<HttpStatusCode, TimeSpan>();
-            responseCache = new RedisCache(options);
+            responseCache = cache;
         }
 
         /// <summary>
@@ -43,7 +54,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             // gets the data from cache, and returns the data if it's a cache hit
             if (request.Method == HttpMethod.Get)
             {
-                var data = await responseCache.GetAsync(key);
+                var data = await responseCache.TryGetAsync(key);
                 if (data != null)
                 {
                     HttpResponseMessage cachedResponse = PrepareCachedEntry(request, data);
@@ -60,7 +71,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             {
                 byte[] entry = await response.ToCacheEntry();
                 var options = new DistributedCacheEntryOptions {AbsoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode)};
-                await responseCache.SetAsync(key, entry, options);
+                await responseCache.TrySetAsync(key, entry, options);
                 HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
                 StatsProvider.ReportCacheMiss(cachedResponse.StatusCode);
                 return cachedResponse;

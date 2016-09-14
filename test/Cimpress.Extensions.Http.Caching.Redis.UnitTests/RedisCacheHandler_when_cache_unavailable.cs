@@ -1,0 +1,55 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.Extensions.Caching.Distributed;
+using Moq;
+using Xunit;
+
+namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
+{
+    public class RedisCacheHandler_when_cache_unavailable
+    {
+        [Fact]
+        public void Gets_the_underlying_data_on_get_error()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
+            cache.Setup(c => c.GetAsync("http://unittest/")).ThrowsAsync(new Exception("unittest"));
+            cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
+            var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
+
+            // execute
+            Func<Task<HttpResponseMessage>> func = async () => await client.GetAsync("http://unittest");
+            func.ShouldNotThrow();
+
+            // validate
+            testMessageHandler.NumberOfCalls.Should().Be(1);
+            cache.Verify(c => c.GetAsync("http://unittest/"), Times.Once);
+            cache.Verify(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
+        }
+
+        [Fact]
+        public void Ignores_set_cache_exceptions()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
+            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(null);
+            cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Throws<Exception>();
+            var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
+
+            // execute twice
+            Func<Task<HttpResponseMessage>> func = async () => await client.GetAsync("http://unittest");
+            func.ShouldNotThrow();
+
+            // validate
+            testMessageHandler.NumberOfCalls.Should().Be(1);
+            cache.Verify(c => c.GetAsync("http://unittest/"), Times.Once);
+            cache.Verify(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
+        }
+    }
+}

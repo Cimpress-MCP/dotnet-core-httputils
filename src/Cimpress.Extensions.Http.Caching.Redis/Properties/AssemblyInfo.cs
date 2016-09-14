@@ -17,3 +17,8 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("85784ab8-5562-4fcc-a25e-1a27a87bd090")]
+
+[assembly: InternalsVisibleTo("Cimpress.Extensions.Http.Caching.Redis.UnitTests")]
+
+//used for mocking:
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
