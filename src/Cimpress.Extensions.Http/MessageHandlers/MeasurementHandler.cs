@@ -14,11 +14,16 @@ namespace Cimpress.Extensions.Http.MessageHandlers
     {
         public ILogger Logger { get; }
 
-        public MeasurementHandler(ILogger logger) : base(new HttpClientHandler())
+        /// <summary>
+        /// Creates a new measurement handler.
+        /// </summary>
+        /// <param name="logger">The logger where to send the log message to after a request has been completed.</param>
+        /// <param name="innerHandler">The optional inner handler.</param>
+        public MeasurementHandler(ILogger logger, HttpMessageHandler innerHandler = null) : base(innerHandler ?? new HttpClientHandler())
         {
             Logger = logger;
         }
-        
+
         /// <summary>
         /// Measures invocation time of the underlying service call and logs it.
         /// </summary>
