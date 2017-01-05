@@ -19,6 +19,10 @@
         "projectUrl": "https://github.com/Cimpress-MCP/dotnet-core-httputils",
         "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
     },
+    "buildOptions": {
+        "debugType": "portable",
+        "warningsAsErrors": true
+    },
 
     "dependencies": {
         "NETStandard.Library": "1.6.0",

@@ -18,6 +18,11 @@
         "System.Diagnostics.TraceSource": "4.0.0"
     },
 
+    "buildOptions": {
+        "debugType": "portable",
+        "warningsAsErrors": true
+    },
+
     "frameworks": {
         "netcoreapp1.5": {
             "imports": [
