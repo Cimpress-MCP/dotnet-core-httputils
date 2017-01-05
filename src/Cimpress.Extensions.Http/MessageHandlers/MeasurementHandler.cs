@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,31 +18,48 @@ namespace Cimpress.Extensions.Http.MessageHandlers
         {
             Logger = logger;
         }
-
+        
         /// <summary>
         /// Measures invocation time of the underlying service call and logs it.
         /// </summary>
         /// <returns></returns>
         /// <remarks>This method logs failed HTTP calls, but does not perform any exception handling
         /// - it's up to the calling client to handle erroneous code.</remarks>
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var sw = Stopwatch.StartNew();
-            HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+            var sendTask = base.SendAsync(request, cancellationToken);
 
-            sw.Stop();
-            var method = response.RequestMessage.Method.Method;
-            var uri = response.RequestMessage.RequestUri;
-            var status = response.StatusCode;
-            bool isSuccess = response.IsSuccessStatusCode;
+            // schedule the continuation without ever awaiting it
+            sendTask.ContinueWith(t =>
+            {
+                sw.Stop();
+                var r = t.Result;
+                var method = request.Method.Method;
+                var uri = request.RequestUri;
 
-            //generates log entry like: "HTTP GET at http://localhost/foo.bar failed with status NotFound in 19ms."
+                HttpStatusCode status = 0;
+                string result = null;
+                if (t.IsCompleted)
+                {
+                    status = r.StatusCode;
+                    result = r.IsSuccessStatusCode ? "completed successfully" : "failed";
+                }
+                else if (t.IsCanceled)
+                {
+                    result = "canceled";
+                }
+                else if (t.IsFaulted)
+                {
+                    result = "faulted";
+                }
 
-            string result = isSuccess ? "completed successfully" : "failed";
-            var message = "HTTP {HttpMethod} at {ServiceUri} {HttpResult} with status {HttpStatus} in {ElapsedMilliseconds}ms.";
-            Logger.LogInformation(message, method, uri, result, status, sw.ElapsedMilliseconds);
+                //generates log entry like: "HTTP GET at http://localhost/foo.bar failed with status NotFound in 19ms."
+                var message = "HTTP {HttpMethod} at {ServiceUri} {HttpResult} with status {HttpStatus} in {ElapsedMilliseconds}ms.";
+                Logger.LogInformation(message, method, uri, result, status, sw.ElapsedMilliseconds);
+            }, cancellationToken);
 
-            return response;
+            return sendTask;
         }
     }
 }
