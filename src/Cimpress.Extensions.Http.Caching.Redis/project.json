@@ -1,5 +1,5 @@
 ﻿{
-  "version": "0.0.1",
+    "version": "0.0.1",
     "title": ".Net Core Client Extensions for HTTP",
     "description": ".Net Core Client Extensions for HTTP",
     "authors": [
@@ -19,6 +19,11 @@
         ],
         "projectUrl": "https://github.com/Cimpress-MCP/dotnet-core-httputils",
         "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+    },
+
+    "buildOptions": {
+        "debugType": "portable",
+        "warningsAsErrors": true
     },
 
     "dependencies": {

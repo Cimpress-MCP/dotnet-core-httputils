@@ -21,6 +21,11 @@
         "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
     },
 
+    "buildOptions": {
+        "debugType": "portable",
+        "warningsAsErrors": true
+    },
+
     "dependencies": {
         "Cimpress.Extensions.Http.Caching.Abstractions": { "target": "project" },
         "NETStandard.Library": "1.6.0",

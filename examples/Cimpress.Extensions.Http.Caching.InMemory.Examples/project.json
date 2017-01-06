@@ -9,6 +9,11 @@
 
     "testRunner": "xunit",
 
+    "buildOptions": {
+        "debugType": "portable",
+        "warningsAsErrors": true
+    },
+
     "dependencies": {
         "Cimpress.Extensions.Http.Caching.InMemory": { "target": "project" },
         "FluentAssertions": "4.14.0",

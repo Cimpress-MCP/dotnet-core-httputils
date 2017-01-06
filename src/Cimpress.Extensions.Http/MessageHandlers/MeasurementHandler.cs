@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,11 +13,19 @@ namespace Cimpress.Extensions.Http.MessageHandlers
     /// </summary>
     public class MeasurementHandler : DelegatingHandler
     {
-        public ILogger Logger { get; }
+        private readonly Action<MeasurementDetails> logFunc;
+        private readonly ILogger logger;
 
-        public MeasurementHandler(ILogger logger) : base(new HttpClientHandler())
+        /// <summary>
+        /// Creates a new measurement handler.
+        /// </summary>
+        /// <param name="logger">The logger where to send the log message to after a request has been completed.</param>
+        /// <param name="innerHandler">The optional inner handler.</param>
+        /// <param name="logFunc">A function to log information; defaults to a standard implementation.</param>
+        public MeasurementHandler(ILogger logger = null, HttpMessageHandler innerHandler = null, Action<MeasurementDetails> logFunc = null) : base(innerHandler ?? new HttpClientHandler())
         {
-            Logger = logger;
+            this.logFunc = logFunc ?? Log;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -24,24 +34,46 @@ namespace Cimpress.Extensions.Http.MessageHandlers
         /// <returns></returns>
         /// <remarks>This method logs failed HTTP calls, but does not perform any exception handling
         /// - it's up to the calling client to handle erroneous code.</remarks>
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            // start measurement
             var sw = Stopwatch.StartNew();
-            HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
-            sw.Stop();
-            var method = response.RequestMessage.Method.Method;
-            var uri = response.RequestMessage.RequestUri;
-            var status = response.StatusCode;
-            bool isSuccess = response.IsSuccessStatusCode;
+            // start the task of executing the request
+            var sendTask = base.SendAsync(request, cancellationToken);
+
+            // schedule the continuation without ever awaiting it
+            sendTask.ContinueWith(t => { logFunc(new MeasurementDetails(request, t, sw.ElapsedMilliseconds)); }, cancellationToken);
+
+            // return the send task
+            return sendTask;
+        }
+
+        private void Log(MeasurementDetails details)
+        {
+            var method = details.Request.Method.Method;
+            var uri = details.Request.RequestUri;
+
+            HttpStatusCode status = 0;
+            string result = null;
+            if (details.SendTask.IsCompleted)
+            {
+                var r = details.SendTask.Result;
+                status = r.StatusCode;
+                result = r.IsSuccessStatusCode ? "completed successfully" : "failed";
+            }
+            else if (details.SendTask.IsCanceled)
+            {
+                result = "canceled";
+            }
+            else if (details.SendTask.IsFaulted)
+            {
+                result = "faulted";
+            }
 
             //generates log entry like: "HTTP GET at http://localhost/foo.bar failed with status NotFound in 19ms."
-
-            string result = isSuccess ? "completed successfully" : "failed";
             var message = "HTTP {HttpMethod} at {ServiceUri} {HttpResult} with status {HttpStatus} in {ElapsedMilliseconds}ms.";
-            Logger.LogInformation(message, method, uri, result, status, sw.ElapsedMilliseconds);
-
-            return response;
+            logger.LogInformation(message, method, uri, result, status, details.ElapsedMilliseconds);
         }
     }
 }

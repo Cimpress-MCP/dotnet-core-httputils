@@ -1,5 +1,6 @@
 .vs/
 .vscode/
+.idea/
 obj/
 *.xproj.user
 project.lock.json
