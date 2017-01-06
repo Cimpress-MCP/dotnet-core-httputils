@@ -17,12 +17,14 @@ namespace Cimpress.Extensions.Http.UnitTests.MessageHandlers
             private readonly TimeSpan executionTime;
             private readonly HttpStatusCode statusCode;
             private readonly bool throwException;
+            private readonly string content;
 
-            public TestHandler(TimeSpan executionTime, HttpStatusCode statusCode, bool throwException)
+            public TestHandler(TimeSpan executionTime, HttpStatusCode statusCode, bool throwException, string content = null)
             {
                 this.executionTime = executionTime;
                 this.statusCode = statusCode;
                 this.throwException = throwException;
+                this.content = content;
             }
 
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -32,7 +34,12 @@ namespace Cimpress.Extensions.Http.UnitTests.MessageHandlers
                 {
                     throw new Exception("unit test");
                 }
-                return new HttpResponseMessage(statusCode);
+                var msg = new HttpResponseMessage(statusCode);
+                if (content != null)
+                {
+                    msg.Content = new StringContent(content);
+                }
+                return msg;
             }
         }
 
@@ -82,6 +89,35 @@ namespace Cimpress.Extensions.Http.UnitTests.MessageHandlers
             // wait until the validation has completed (but limit to max 1 second to avoid waiting forever)
             bool awaited = resetEvent.WaitOne(TimeSpan.FromSeconds(1));
             awaited.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Does_not_await_completion_of_log_function()
+        {
+            // setup
+            var resetEvent = new ManualResetEvent(false);
+            var hasLogged = false;
+            Action<MeasurementDetails> logFunc = async details =>
+            {
+                // validate
+                await Task.Delay(100);
+                hasLogged = true;
+                resetEvent.Set();
+            };
+            var expectedResult = Guid.NewGuid().ToString();
+            var handler = new MeasurementHandler(null, new TestHandler(TimeSpan.FromMilliseconds(100), HttpStatusCode.OK, false, expectedResult), logFunc);
+            var client = new HttpClient(handler);
+
+            // execute
+            var result = await client.GetStringAsync("http://unit.test");
+            
+            // validate that the string was retrieved, but the logger hasn't completed yet
+            result.ShouldBeEquivalentTo(expectedResult);
+            hasLogged.Should().BeFalse();
+
+            // ensure logging eventually happened
+            resetEvent.WaitOne(TimeSpan.FromSeconds(1));
+            hasLogged.Should().BeTrue();
         }
     }
 }
