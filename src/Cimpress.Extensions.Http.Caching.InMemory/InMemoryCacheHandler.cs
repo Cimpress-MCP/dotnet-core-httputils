@@ -64,12 +64,13 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
             {
                 TimeSpan absoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode);
 
+                StatsProvider.ReportCacheMiss(response.StatusCode);
+
                 if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
                 {
                     CacheData entry = await response.ToCacheEntry();
                     responseCache.Set(request.RequestUri, entry, absoluteExpirationRelativeToNow);
                     HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
-                    StatsProvider.ReportCacheMiss(cachedResponse.StatusCode);
                     return cachedResponse;
                 }
             }
