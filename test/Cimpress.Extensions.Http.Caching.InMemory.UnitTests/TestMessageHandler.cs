@@ -9,9 +9,9 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
     {
         internal const HttpStatusCode DefaultResponseStatusCode = HttpStatusCode.OK;
         internal const string DefaultContent = "unit test";
-
-        private readonly HttpStatusCode responseStatusCode;
-        private readonly string content;
+        
+        protected readonly HttpStatusCode responseStatusCode;
+        protected readonly string content;
 
         public int NumberOfCalls { get; set; }
         
@@ -26,13 +26,16 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             NumberOfCalls++;
 
             // simulate actual result
-            var response = new HttpResponseMessage
+            return Task.FromResult(makeResponse());
+        }
+
+        protected virtual HttpResponseMessage makeResponse()
+        {
+            return new HttpResponseMessage
             {
                 Content = new StringContent(content),
                 StatusCode = responseStatusCode
             };
-
-            return Task.FromResult(response);
         }
     }
 }

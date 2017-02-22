@@ -84,7 +84,11 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
         {
             HttpResponseMessage copy = cachedData.CachableResponse.CopyCachable();
             copy.Content = new ByteArrayContent(cachedData.Data);
+            foreach (var kvp in cachedData.ContentHeaders) {
+                copy.Content.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+            }
             copy.RequestMessage = request;
+            
             return copy;
         }
     }

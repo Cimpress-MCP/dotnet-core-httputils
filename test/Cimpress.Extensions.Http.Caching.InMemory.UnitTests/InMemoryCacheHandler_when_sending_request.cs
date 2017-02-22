@@ -111,5 +111,20 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             originalResultString.ShouldBeEquivalentTo(cachedResultString);
             originalResultString.ShouldBeEquivalentTo(TestMessageHandler.DefaultContent);
         }
+
+
+        [Fact]
+        public async Task Returns_response_header()
+        {
+            // setup
+            var testMessageHandler = new TestContentTypeMessageHandler("text/plain");
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler));
+
+            // execute 
+            HttpResponseMessage response = await client.GetAsync("http://unittest");
+
+            // validate
+            response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
+        }
     }
 }
