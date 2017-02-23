@@ -6,7 +6,7 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
     /// <summary>
     /// Extension methods of the HttpResponseMessage that are related to the caching functionality.
     /// </summary>
-    public static class HttpContentHeadersExtensions
+    internal static class HttpContentHeadersExtensions
     {
         /// <summary>
         /// Creates a copy of the HttpContentHeaders for caching
