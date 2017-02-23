@@ -117,7 +117,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
         public async Task Returns_response_header()
         {
             // setup
-            var testMessageHandler = new TestContentTypeMessageHandler("text/plain");
+            var testMessageHandler = new TestMessageHandler(System.Net.HttpStatusCode.OK, "test content", "text/plain", System.Text.Encoding.UTF8);
             var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler));
 
             // execute 
@@ -125,6 +125,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
 
             // validate
             response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
+            response.Content.Headers.ContentType.CharSet.Should().Be("utf-8");
         }
     }
 }
