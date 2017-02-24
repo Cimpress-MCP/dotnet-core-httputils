@@ -111,5 +111,30 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             originalResultString.ShouldBeEquivalentTo(cachedResultString);
             originalResultString.ShouldBeEquivalentTo(TestMessageHandler.DefaultContent);
         }
+
+        [Fact]
+        public async Task Disable_cache_per_statusCode()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
+
+            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(null);
+            cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
+
+            var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan>();
+
+            cacheExpirationPerStatusCode.Add((HttpStatusCode)200, TimeSpan.FromSeconds(0));
+
+            var client = new HttpClient(new RedisCacheHandler(testMessageHandler, cacheExpirationPerStatusCode, cache.Object));
+
+            // execute twice
+            await client.GetAsync("http://unittest");
+            await client.GetAsync("http://unittest");
+
+            // validate
+            testMessageHandler.NumberOfCalls.Should().Be(2);
+            cache.Verify(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Exactly(0));
+        }
     }
 }

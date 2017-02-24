@@ -69,12 +69,19 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             // puts the retrieved response into the cache and returns the cached entry
             if (request.Method == HttpMethod.Get)
             {
-                byte[] entry = await response.ToCacheEntry();
-                var options = new DistributedCacheEntryOptions {AbsoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode)};
-                await responseCache.TrySetAsync(key, entry, options);
-                HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
-                StatsProvider.ReportCacheMiss(cachedResponse.StatusCode);
-                return cachedResponse;
+                var absoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode);
+
+                StatsProvider.ReportCacheMiss(response.StatusCode);
+
+                if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
+                {
+                    byte[] entry = await response.ToCacheEntry();
+                    var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = absoluteExpirationRelativeToNow };
+                    await responseCache.TrySetAsync(key, entry, options);
+                    HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
+
+                    return cachedResponse;
+                }
             }
 
             // returns the original response
