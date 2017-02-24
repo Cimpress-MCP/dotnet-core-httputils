@@ -62,12 +62,17 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
             // puts the retrieved response into the cache and returns the cached entry
             if (request.Method == HttpMethod.Get)
             {
-                CacheData entry = await response.ToCacheEntry();
                 TimeSpan absoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode);
-                responseCache.Set(request.RequestUri, entry, absoluteExpirationRelativeToNow);
-                HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
-                StatsProvider.ReportCacheMiss(cachedResponse.StatusCode);
-                return cachedResponse;
+
+                StatsProvider.ReportCacheMiss(response.StatusCode);
+
+                if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
+                {
+                    CacheData entry = await response.ToCacheEntry();
+                    responseCache.Set(request.RequestUri, entry, absoluteExpirationRelativeToNow);
+                    HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
+                    return cachedResponse;
+                }
             }
 
             // returns the original response
