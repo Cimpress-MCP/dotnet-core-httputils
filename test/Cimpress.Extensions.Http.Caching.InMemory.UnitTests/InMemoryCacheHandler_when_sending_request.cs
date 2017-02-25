@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -112,7 +114,6 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             originalResultString.ShouldBeEquivalentTo(TestMessageHandler.DefaultContent);
         }
 
-
         [Fact]
         public async Task Returns_response_header()
         {
@@ -126,6 +127,25 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             // validate
             response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
             response.Content.Headers.ContentType.CharSet.Should().Be("utf-8");
+        }
+
+        [Fact]
+        public async Task Disable_cache_per_statusCode()
+        {
+            // setup
+            var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan>();
+
+            cacheExpirationPerStatusCode.Add((HttpStatusCode)200, TimeSpan.FromSeconds(0));
+
+            var testMessageHandler = new TestMessageHandler();
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, cacheExpirationPerStatusCode));
+
+            // execute twice
+            await client.GetAsync("http://unittest");
+            await client.GetAsync("http://unittest");
+
+            // validate
+            testMessageHandler.NumberOfCalls.Should().Be(2);
         }
     }
 }
