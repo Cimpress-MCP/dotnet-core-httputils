@@ -115,6 +115,21 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
         }
 
         [Fact]
+        public async Task Returns_response_header()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler(System.Net.HttpStatusCode.OK, "test content", "text/plain", System.Text.Encoding.UTF8);
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler));
+
+            // execute 
+            HttpResponseMessage response = await client.GetAsync("http://unittest");
+
+            // validate
+            response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
+            response.Content.Headers.ContentType.CharSet.Should().Be("utf-8");
+        }
+
+        [Fact]
         public async Task Disable_cache_per_statusCode()
         {
             // setup

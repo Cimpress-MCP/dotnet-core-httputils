@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace Cimpress.Extensions.Http.Caching.Abstractions
 {
@@ -7,10 +9,11 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
     /// </summary>
     public class CacheData
     {
-        public CacheData(byte[] data, HttpResponseMessage cachableResponse)
+        public CacheData(byte[] data, HttpResponseMessage cachableResponse, Dictionary<string, IEnumerable<string>> contentHeaders = null)
         {
             Data = data;
             CachableResponse = cachableResponse;
+            ContentHeaders = contentHeaders;
         }
 
         /// <summary>
@@ -22,5 +25,10 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
         /// The content of the response.
         /// </summary>
         public byte[] Data { get; set; }
+
+        /// <summary>
+        /// The content headers of the response
+        /// </summary>
+        public Dictionary<string, IEnumerable<string>> ContentHeaders { get; set; }
     }
 }

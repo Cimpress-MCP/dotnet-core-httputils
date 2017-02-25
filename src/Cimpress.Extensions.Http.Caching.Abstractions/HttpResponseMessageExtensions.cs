@@ -17,7 +17,8 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
         {
             var data = await response.Content.ReadAsByteArrayAsync();
             var copy = response.CopyCachable();
-            var entry = new CacheData(data, copy);
+            var contentHeaders = response.Content.Headers.ToDictionary();
+            var entry = new CacheData(data, copy, contentHeaders);
             return entry;
         }
 
