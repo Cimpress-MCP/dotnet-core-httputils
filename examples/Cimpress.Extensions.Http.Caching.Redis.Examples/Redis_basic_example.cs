@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Cimpress.Extensions.Http.Caching.Abstractions;
+using Cimpress.Extensions.Http.Caching.Redis.Microsoft;
 using FluentAssertions;
 using Xunit;
-using Cimpress.Extensions.Http.Caching.Abstractions;
-using Cimpress.Extensions.Http.Caching.Redis;
-using Cimpress.Extensions.Http.Caching.Redis.Microsoft;
 
-namespace Cimpess.Extensions.Http.Caching.Redis.Examples
+namespace Cimpress.Extensions.Http.Caching.Redis.Examples
 {
     public class Redis_basic_example
     {
