@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
 using Cimpress.Extensions.Http.Caching.Abstractions;
-using Cimpress.Extensions.Http.Caching.InMemory;
 
 namespace Cimpress.Extensions.Http.Caching.InMemory.Examples
 {
