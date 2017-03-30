@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Text;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Moq;
 using Xunit;
+using Cimpress.Extensions.Http.Caching.Abstractions;
 
 namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
 {
@@ -25,7 +26,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
 
             // execute twice
             await client.GetAsync("http://unittest");
-            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(new SerializableCacheData(new byte[0], new HttpResponseMessage(HttpStatusCode.OK)).Serialize());
+            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(new CacheData(new byte[0], new HttpResponseMessage(HttpStatusCode.OK), null, null).Serialize());
             await client.GetAsync("http://unittest");
 
             // validate
@@ -95,13 +96,19 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
         public async Task Data_from_call_matches_data_from_cache()
         {
             // setup
-            var testMessageHandler = new TestMessageHandler();
+            var expectedContent = "test content";
+            var expectedContentTypeHeader = "application/json";
+            var expectedEncoding = "utf-8";
+            var expectedEtag = new EntityTagHeaderValue("\"unit-test\"");
+            var testMessageHandler = new TestMessageHandler(System.Net.HttpStatusCode.OK, expectedContent, expectedContentTypeHeader, expectedEtag);
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(new SerializableCacheData(Encoding.UTF8.GetBytes(TestMessageHandler.DefaultContent), new HttpResponseMessage(HttpStatusCode.OK)).Serialize());
-            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
+            byte[] savedData = null;
+            cache.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(savedData);
+            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Callback((string key, byte[] data, DistributedCacheEntryOptions o) => savedData = data)
+                .Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
-            // execute twice for different methods
+            // execute twice
             var originalResult = await client.GetAsync("http://unittest");
             var cachedResult = await client.GetAsync("http://unittest");
             var originalResultString = await originalResult.Content.ReadAsStringAsync();
@@ -109,7 +116,13 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
 
             // validate
             originalResultString.ShouldBeEquivalentTo(cachedResultString);
-            originalResultString.ShouldBeEquivalentTo(TestMessageHandler.DefaultContent);
+            originalResultString.ShouldBeEquivalentTo(expectedContent);
+            originalResult.Headers.ETag.ShouldBeEquivalentTo(expectedEtag);
+            cachedResult.Headers.ETag.ShouldBeEquivalentTo(expectedEtag);
+            originalResult.Content.Headers.ContentType.MediaType.Should().Be(expectedContentTypeHeader);
+            originalResult.Content.Headers.ContentType.CharSet.Should().Be(expectedEncoding);
+            cachedResult.Content.Headers.ContentType.MediaType.Should().Be(expectedContentTypeHeader);
+            cachedResult.Content.Headers.ContentType.CharSet.Should().Be(expectedEncoding);
         }
 
         [Fact]

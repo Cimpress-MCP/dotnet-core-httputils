@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Cimpress.Extensions.Http.Caching.Abstractions
@@ -8,33 +9,43 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
     /// </summary>
     public static class HttpResponseMessageExtensions
     {
-        /// <summary>
-        /// Takes an HttpResponseMessage and converts that to a <see cref="CacheData"/>.
-        /// </summary>
-        /// <param name="response">The response to put into the cache.</param>
-        /// <returns>A cache entry that can be placed into the cache.</returns>
         public static async Task<CacheData> ToCacheEntry(this HttpResponseMessage response)
         {
             var data = await response.Content.ReadAsByteArrayAsync();
-            var copy = response.CopyCachable();
-            var contentHeaders = response.Content.Headers.ToDictionary();
-            var entry = new CacheData(data, copy, contentHeaders);
+            var copy = new HttpResponseMessage{ ReasonPhrase = response.ReasonPhrase, StatusCode = response.StatusCode, Version = response.Version };
+            var headers = response.Headers.Where(h => h.Value != null && h.Value.Any()).ToDictionary(h => h.Key, h => h.Value);
+            var contentHeaders = response.Content.Headers.Where(h => h.Value != null && h.Value.Any()).ToDictionary(h => h.Key, h => h.Value);
+            var entry = new CacheData(data, copy, headers, contentHeaders);
             return entry;
         }
 
         /// <summary>
-        /// Creates a copy of the HttpResponseMessage excluding non-cacheable data such as the content stream or request based data such as the HttpRequestMessage itself.
+        /// Prepares the cached entry to be consumed by the caller, notably by setting the content.
         /// </summary>
-        /// <param name="response">The response to copy.</param>
-        /// <returns>A copy of the response, excluding non-cacheable data.</returns>
-        public static HttpResponseMessage CopyCachable(this HttpResponseMessage response)
+        /// <param name="request">The request that invoked retrieving this response and need to be attached to the response.</param>
+        /// <param name="cachedData">The deserialized data from the cache.</param>
+        /// <returns>A valid HttpResponseMessage that can be consumed by the caller of this message handler.</returns>
+        public static HttpResponseMessage PrepareCachedEntry(this HttpRequestMessage request, CacheData cachedData)
         {
-            var responseCopy = new HttpResponseMessage { ReasonPhrase = response.ReasonPhrase, StatusCode = response.StatusCode, Version = response.Version };
-            foreach (var h in response.Headers)
+            var response = cachedData.CachableResponse;
+            if (cachedData.Headers != null)
             {
-                responseCopy.Headers.Add(h.Key, h.Value);
+                foreach (var kvp in cachedData.Headers)
+                {
+                    response.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+                }
             }
-            return responseCopy;
+
+            response.Content = new ByteArrayContent(cachedData.Data);
+            if (cachedData.ContentHeaders != null)
+            {
+                foreach (var kvp in cachedData.ContentHeaders)
+                {
+                    response.Content.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+                }
+            }
+            response.RequestMessage = request;
+            return response;
         }
     }
 }

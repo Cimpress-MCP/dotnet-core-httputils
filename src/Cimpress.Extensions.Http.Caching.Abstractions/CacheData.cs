@@ -8,26 +8,32 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
     /// </summary>
     public class CacheData
     {
-        public CacheData(byte[] data, HttpResponseMessage cachableResponse, Dictionary<string, IEnumerable<string>> contentHeaders = null)
+        public CacheData(byte[] data, HttpResponseMessage cachableResponse, Dictionary<string, IEnumerable<string>> headers, Dictionary<string, IEnumerable<string>> contentHeaders)
         {
             Data = data;
             CachableResponse = cachableResponse;
+            Headers = headers;
             ContentHeaders = contentHeaders;
         }
 
         /// <summary>
         /// The cachable part of a previously retrieved response (excludes the content and request).
         /// </summary>
-        public HttpResponseMessage CachableResponse { get; set; }
+        public HttpResponseMessage CachableResponse { get; }
 
         /// <summary>
         /// The content of the response.
         /// </summary>
-        public byte[] Data { get; set; }
+        public byte[] Data { get; }
 
         /// <summary>
-        /// The content headers of the response
+        /// the headers of the response.
         /// </summary>
-        public Dictionary<string, IEnumerable<string>> ContentHeaders { get; set; }
+        public Dictionary<string, IEnumerable<string>> Headers { get; } = new Dictionary<string, IEnumerable<string>>();
+
+        /// <summary>
+        /// The content headers of the response.
+        /// </summary>
+        public Dictionary<string, IEnumerable<string>> ContentHeaders { get; } = new Dictionary<string, IEnumerable<string>>();
     }
 }
