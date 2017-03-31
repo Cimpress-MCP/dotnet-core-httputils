@@ -68,7 +68,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
 
                 if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
                 {
-                    CacheData entry = await response.ToCacheEntry();
+                    var entry = await response.ToCacheEntry();
                     responseCache.Set(request.RequestUri, entry, absoluteExpirationRelativeToNow);
                     HttpResponseMessage cachedResponse = request.PrepareCachedEntry(entry);
                     return cachedResponse;
