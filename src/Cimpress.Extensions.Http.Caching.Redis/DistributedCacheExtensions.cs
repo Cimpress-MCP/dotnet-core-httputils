@@ -44,7 +44,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             }
             catch (Exception)
             {
-                // ignoer all exceptions
+                // ignore all exceptions
             }
         }
     }

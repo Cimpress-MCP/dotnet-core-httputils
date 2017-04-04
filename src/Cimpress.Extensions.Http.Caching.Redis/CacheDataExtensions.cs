@@ -1,11 +1,11 @@
 ﻿using System;
 using Newtonsoft.Json;
-
+using Cimpress.Extensions.Http.Caching.Abstractions;
 namespace Cimpress.Extensions.Http.Caching.Redis
 {
     public static class CacheDataExtensions
     {
-        public static byte[] Serialize(this SerializableCacheData cacheData)
+        public static byte[] Serialize(this CacheData cacheData)
         {
             string json = JsonConvert.SerializeObject(cacheData);
             byte[] bytes = new byte[json.Length * sizeof(char)];
@@ -13,20 +13,20 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             return bytes;
         }
 
-        public static SerializableCacheData Deserialize(this byte[] cacheData)
+        public static CacheData Deserialize(this byte[] cacheData)
         {
-            char[] chars = new char[cacheData.Length / sizeof(char)];
-            Buffer.BlockCopy(cacheData, 0, chars, 0, cacheData.Length);
-            string json = new string(chars);
-            SerializableCacheData data = JsonConvert.DeserializeObject<SerializableCacheData>(json);
-
-            var headers = data.CachableResponse.Headers;
-            foreach (var header in data.ResponseHeaders)
+            try
             {
-                headers.Add(header.Key, header.Value);
+                char[] chars = new char[cacheData.Length / sizeof(char)];
+                Buffer.BlockCopy(cacheData, 0, chars, 0, cacheData.Length);
+                string json = new string(chars);
+                var data = JsonConvert.DeserializeObject<CacheData>(json);
+                return data;
             }
-
-            return data;
+            catch
+            {
+                return null;
+            }
         }
     }
 }

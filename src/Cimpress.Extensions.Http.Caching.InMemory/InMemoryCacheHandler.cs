@@ -51,7 +51,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
             CacheData cachedData;
             if (request.Method == HttpMethod.Get && responseCache.TryGetValue(request.RequestUri, out cachedData))
             {
-                HttpResponseMessage cachedResponse = PrepareCachedEntry(request, cachedData);
+                HttpResponseMessage cachedResponse = request.PrepareCachedEntry(cachedData);
                 StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
                 return cachedResponse;
             }
@@ -68,33 +68,15 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
 
                 if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
                 {
-                    CacheData entry = await response.ToCacheEntry();
+                    var entry = await response.ToCacheEntry();
                     responseCache.Set(request.RequestUri, entry, absoluteExpirationRelativeToNow);
-                    HttpResponseMessage cachedResponse = PrepareCachedEntry(request, entry);
+                    HttpResponseMessage cachedResponse = request.PrepareCachedEntry(entry);
                     return cachedResponse;
                 }
             }
 
             // returns the original response
             return response;
-        }
-
-        /// <summary>
-        /// Prepares the cached entry to be consumed by the caller, notably by setting the content.
-        /// </summary>
-        /// <param name="request">The request that invoked retrieving this response and need to be attached to the response.</param>
-        /// <param name="cachedData">The cache data that hold the data.</param>
-        /// <returns>A valid HttpResponseMessage that can be consumed by the caller of this message handler.</returns>
-        private static HttpResponseMessage PrepareCachedEntry(HttpRequestMessage request, CacheData cachedData)
-        {
-            HttpResponseMessage copy = cachedData.CachableResponse.CopyCachable();
-            copy.Content = new ByteArrayContent(cachedData.Data);
-            foreach (var kvp in cachedData.ContentHeaders) {
-                copy.Content.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
-            }
-            copy.RequestMessage = request;
-            
-            return copy;
         }
     }
 }
