@@ -29,11 +29,11 @@ namespace Cimpress.Extensions.Http.Caching.Abstractions
         /// <summary>
         /// the headers of the response.
         /// </summary>
-        public Dictionary<string, IEnumerable<string>> Headers { get; } = new Dictionary<string, IEnumerable<string>>();
+        public Dictionary<string, IEnumerable<string>> Headers { get; }
 
         /// <summary>
         /// The content headers of the response.
         /// </summary>
-        public Dictionary<string, IEnumerable<string>> ContentHeaders { get; } = new Dictionary<string, IEnumerable<string>>();
+        public Dictionary<string, IEnumerable<string>> ContentHeaders { get; }
     }
 }
