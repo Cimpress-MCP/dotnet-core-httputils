@@ -15,11 +15,18 @@ namespace Cimpress.Extensions.Http.Caching.Redis
 
         public static CacheData Deserialize(this byte[] cacheData)
         {
-            char[] chars = new char[cacheData.Length / sizeof(char)];
-            Buffer.BlockCopy(cacheData, 0, chars, 0, cacheData.Length);
-            string json = new string(chars);
-            var data = JsonConvert.DeserializeObject<CacheData>(json);
-            return data;
+            try
+            {
+                char[] chars = new char[cacheData.Length / sizeof(char)];
+                Buffer.BlockCopy(cacheData, 0, chars, 0, cacheData.Length);
+                string json = new string(chars);
+                var data = JsonConvert.DeserializeObject<CacheData>(json);
+                return data;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

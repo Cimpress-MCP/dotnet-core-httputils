@@ -57,9 +57,13 @@ namespace Cimpress.Extensions.Http.Caching.Redis
                 var data = await responseCache.TryGetAsync(key);
                 if (data != null)
                 {
-                    HttpResponseMessage cachedResponse = request.PrepareCachedEntry(data.Deserialize());
-                    StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
-                    return cachedResponse;
+                    var deserializedData = data.Deserialize();
+                    if (deserializedData != null)
+                    {
+                        var cachedResponse = request.PrepareCachedEntry(deserializedData);
+                        StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
+                        return cachedResponse;
+                    }
                 }
             }
 
