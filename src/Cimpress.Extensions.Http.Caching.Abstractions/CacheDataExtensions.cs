@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Cimpress.Extensions.Http.Caching.Abstractions;
-namespace Cimpress.Extensions.Http.Caching.Redis
+
+namespace Cimpress.Extensions.Http.Caching.Abstractions
 {
     public static class CacheDataExtensions
     {

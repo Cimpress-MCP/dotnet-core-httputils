@@ -50,25 +50,21 @@ namespace Cimpress.Extensions.Http.Caching.Redis
         /// <returns>The HttpResponseMessage from cache, or a newly invoked one.</returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            string key = request.RequestUri.ToString();
+            var key = request.RequestUri.ToString();
             // gets the data from cache, and returns the data if it's a cache hit
             if (request.Method == HttpMethod.Get)
             {
                 var data = await responseCache.TryGetAsync(key);
                 if (data != null)
                 {
-                    var deserializedData = data.Deserialize();
-                    if (deserializedData != null)
-                    {
-                        var cachedResponse = request.PrepareCachedEntry(deserializedData);
-                        StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
-                        return cachedResponse;
-                    }
+                    var cachedResponse = request.PrepareCachedEntry(data);
+                    StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
+                    return cachedResponse;
                 }
             }
 
             // cache misses need to ask the inner handler for an actual response
-            HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+            var response = await base.SendAsync(request, cancellationToken);
 
             // puts the retrieved response into the cache and returns the cached entry
             if (request.Method == HttpMethod.Get)
@@ -79,11 +75,9 @@ namespace Cimpress.Extensions.Http.Caching.Redis
 
                 if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
                 {
-                    var entry = (await response.ToCacheEntry()).Serialize();
-                    var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = absoluteExpirationRelativeToNow };
-                    await responseCache.TrySetAsync(key, entry, options);
-                    HttpResponseMessage cachedResponse = request.PrepareCachedEntry(entry.Deserialize());
-                    return cachedResponse;
+                    var entry = await response.ToCacheEntry();
+                    await responseCache.TrySetAsync(key, entry, absoluteExpirationRelativeToNow);
+                    return request.PrepareCachedEntry(entry);
                 }
             }
 

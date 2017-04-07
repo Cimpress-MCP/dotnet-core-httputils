@@ -47,31 +47,34 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
         /// <returns>The HttpResponseMessage from cache, or a newly invoked one.</returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            var key = request.RequestUri.ToString();
             // gets the data from cache, and returns the data if it's a cache hit
-            CacheData cachedData;
-            if (request.Method == HttpMethod.Get && responseCache.TryGetValue(request.RequestUri, out cachedData))
+            if (request.Method == HttpMethod.Get)
             {
-                HttpResponseMessage cachedResponse = request.PrepareCachedEntry(cachedData);
-                StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
-                return cachedResponse;
+                var data = await responseCache.TryGetAsync(key);
+                if (data != null)
+                {
+                    var cachedResponse = request.PrepareCachedEntry(data);
+                    StatsProvider.ReportCacheHit(cachedResponse.StatusCode);
+                    return cachedResponse;
+                }
             }
 
             // cache misses need to ask the inner handler for an actual response
-            HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+            var response = await base.SendAsync(request, cancellationToken);
 
             // puts the retrieved response into the cache and returns the cached entry
             if (request.Method == HttpMethod.Get)
             {
-                TimeSpan absoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode);
+                var absoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode);
 
                 StatsProvider.ReportCacheMiss(response.StatusCode);
 
                 if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
                 {
                     var entry = await response.ToCacheEntry();
-                    responseCache.Set(request.RequestUri, entry, absoluteExpirationRelativeToNow);
-                    HttpResponseMessage cachedResponse = request.PrepareCachedEntry(entry);
-                    return cachedResponse;
+                    await responseCache.TrySetAsync(key, entry, absoluteExpirationRelativeToNow);
+                    return request.PrepareCachedEntry(entry);
                 }
             }
 
