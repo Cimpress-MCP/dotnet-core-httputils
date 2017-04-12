@@ -36,7 +36,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
 
             // execute twice
             await client.GetAsync("http://unittest");
-            cache.Remove(new Uri("http://unittest"));
+            cache.Remove(new Uri("http://unittest").ToString());
             await client.GetAsync("http://unittest");
 
             // validate
