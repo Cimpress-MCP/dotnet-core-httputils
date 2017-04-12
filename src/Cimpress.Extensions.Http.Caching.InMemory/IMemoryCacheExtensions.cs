@@ -16,22 +16,21 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
         /// <param name="cache">The in memory cache.</param>
         /// <param name="key">The key to retrieve from the cache.</param>
         /// <returns>The data of the cache entry, or null if not found or on any error.</returns>
-        public static async Task<CacheData> TryGetAsync(this IMemoryCache cache, string key)
+        public static Task<CacheData> TryGetAsync(this IMemoryCache cache, string key)
         {
             try
             {
                 byte[] binaryData = null;
                 if (cache.TryGetValue(key, out binaryData))
                 {
-                    await Task.FromResult(true);
-                    return binaryData.Deserialize();
+                    return Task.FromResult(binaryData.Deserialize());
                 }
-                return null;
+                return Task.FromResult(default(CacheData));
             }
             catch (Exception)
             {
                 // ignore all exceptions; return null
-                return null;
+                return Task.FromResult(default(CacheData));
             }
         }
 
