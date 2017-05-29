@@ -116,7 +116,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
         {
             // setup
             var testMessageHandler1 = new TestMessageHandler(HttpStatusCode.OK, "message-1");
-            var testMessageHandler2 = new TestMessageHandler(HttpStatusCode.BadRequest, "message-2");
+            var testMessageHandler2 = new TestMessageHandler(HttpStatusCode.InternalServerError, "message-2");
             var cache = new MemoryCache(new MemoryCacheOptions());
             var client1 = new HttpClient(new InMemoryCacheFallbackHandler(testMessageHandler1, TimeSpan.FromDays(1), TimeSpan.FromDays(1), null, cache));
             var client2 = new HttpClient(new InMemoryCacheFallbackHandler(testMessageHandler2, TimeSpan.FromDays(1), TimeSpan.FromDays(1), null, cache));

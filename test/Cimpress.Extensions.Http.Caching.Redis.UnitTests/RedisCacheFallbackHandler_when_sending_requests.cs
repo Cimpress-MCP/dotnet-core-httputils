@@ -121,7 +121,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var serializedCacheEntry = cacheEntryToSerialize.Serialize();
 
             var testMessageHandler1 = new TestMessageHandler(HttpStatusCode.OK, "message-1");
-            var testMessageHandler2 = new TestMessageHandler(HttpStatusCode.BadRequest, "message-2");
+            var testMessageHandler2 = new TestMessageHandler(HttpStatusCode.InternalServerError, "message-2");
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
             cache.SetupSequence(c => c.GetAsync(url)).ReturnsAsync(default(byte[])).ReturnsAsync(serializedCacheEntry);
             var client1 = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler1, TimeSpan.FromDays(1), TimeSpan.FromDays(1), cache.Object));

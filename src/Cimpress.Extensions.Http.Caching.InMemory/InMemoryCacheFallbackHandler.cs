@@ -123,7 +123,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
 
         private async Task<CacheData> SaveToCache(HttpResponseMessage response, string key)
         {
-            if (response.IsSuccessStatusCode && TimeSpan.Zero != cacheDuration)
+            if ((int) response.StatusCode < 500 && TimeSpan.Zero != cacheDuration)
             {
                 var entry = await response.ToCacheEntry();
                 await responseCache.TrySetAsync(key, entry, cacheDuration);
