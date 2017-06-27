@@ -52,7 +52,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
         {
             var key = request.RequestUri.ToString();
             // gets the data from cache, and returns the data if it's a cache hit
-            if (request.Method == HttpMethod.Get)
+            if (request.Method == HttpMethod.Get || request.Method == HttpMethod.Head)
             {
                 var data = await responseCache.TryGetAsync(key);
                 if (data != null)
@@ -67,7 +67,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             var response = await base.SendAsync(request, cancellationToken);
 
             // puts the retrieved response into the cache and returns the cached entry
-            if (request.Method == HttpMethod.Get)
+            if (request.Method == HttpMethod.Get || request.Method == HttpMethod.Head)
             {
                 var absoluteExpirationRelativeToNow = response.StatusCode.GetAbsoluteExpirationRelativeToNow(cacheExpirationPerHttpResponseCode);
 

@@ -50,7 +50,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             // only handle GET methods
-            if (request.Method != HttpMethod.Get)
+            if (request.Method != HttpMethod.Get && request.Method != HttpMethod.Head)
             {
                 return await base.SendAsync(request, cancellationToken);
             }
