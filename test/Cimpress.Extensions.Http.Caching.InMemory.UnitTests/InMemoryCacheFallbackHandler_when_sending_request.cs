@@ -23,7 +23,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
 
             // execute twice
             await client.GetAsync(url);
-            cache.Get(url).Should().NotBeNull(); // ensure it's cached before the 2nd call
+            cache.Get(HttpMethod.Get + url).Should().NotBeNull(); // ensure it's cached before the 2nd call
             await client.GetAsync(url);
 
             // validate
@@ -42,11 +42,28 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
 
             // execute twice, validate cache is called each time
             await client.GetAsync(url);
-            cache.Verify(c => c.CreateEntry(url), Times.Once);
+            cache.Verify(c => c.CreateEntry(HttpMethod.Get + url), Times.Once);
             await client.GetAsync(url);
-            cache.Verify(c => c.CreateEntry(url), Times.Exactly(2));
+            cache.Verify(c => c.CreateEntry(HttpMethod.Get + url), Times.Exactly(2));
         }
 
+        [Fact]
+        public async Task Updates_the_cache_for_head_and_get_independently()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var cache = new Mock<IMemoryCache>(MockBehavior.Strict);
+            var cacheTime = TimeSpan.FromSeconds(123);
+            cache.Setup(c => c.CreateEntry(url));
+            var client = new HttpClient(new InMemoryCacheFallbackHandler(testMessageHandler, TimeSpan.FromDays(1), cacheTime, null, cache.Object));
+
+            // execute twice, validate cache is called each time
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url));
+            cache.Verify(c => c.CreateEntry(HttpMethod.Head + url), Times.Once);
+            cache.Verify(c => c.CreateEntry(HttpMethod.Get + url), Times.Once);
+        }
+        
         [Fact]
         public async Task Never_updates_the_cache_on_failure()
         {
@@ -96,7 +113,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
 
             // execute twice
             var result1 = await client1.GetAsync(url);
-            cache.Get(url).Should().NotBeNull();
+            cache.Get(HttpMethod.Get + url).Should().NotBeNull();
             var result2 = await client2.GetAsync(url);
 
             // validate

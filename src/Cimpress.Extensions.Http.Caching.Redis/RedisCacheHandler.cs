@@ -50,7 +50,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
         /// <returns>The HttpResponseMessage from cache, or a newly invoked one.</returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var key = request.RequestUri.ToString();
+            var key = request.Method + request.RequestUri.ToString();
             // gets the data from cache, and returns the data if it's a cache hit
             if (request.Method == HttpMethod.Get || request.Method == HttpMethod.Head)
             {

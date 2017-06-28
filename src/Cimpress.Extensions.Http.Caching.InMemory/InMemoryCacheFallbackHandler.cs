@@ -55,7 +55,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
                 return await base.SendAsync(request, cancellationToken);
             }
 
-            var key = request.RequestUri.ToString();
+            var key = request.Method + request.RequestUri.ToString();
 
             // start 3 tasks
             var httpSendTask = base.SendAsync(request, cancellationToken);
