@@ -37,7 +37,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IMemoryCache>(MockBehavior.Strict);
             var cacheTime = TimeSpan.FromSeconds(123);
-            cache.Setup(c => c.CreateEntry(url));
+            cache.Setup(c => c.CreateEntry(HttpMethod.Get + url));
             var client = new HttpClient(new InMemoryCacheFallbackHandler(testMessageHandler, TimeSpan.FromDays(1), cacheTime, null, cache.Object));
 
             // execute twice, validate cache is called each time
@@ -54,7 +54,8 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IMemoryCache>(MockBehavior.Strict);
             var cacheTime = TimeSpan.FromSeconds(123);
-            cache.Setup(c => c.CreateEntry(url));
+            cache.Setup(c => c.CreateEntry(HttpMethod.Get + url));
+            cache.Setup(c => c.CreateEntry(HttpMethod.Head + url));
             var client = new HttpClient(new InMemoryCacheFallbackHandler(testMessageHandler, TimeSpan.FromDays(1), cacheTime, null, cache.Object));
 
             // execute twice, validate cache is called each time
