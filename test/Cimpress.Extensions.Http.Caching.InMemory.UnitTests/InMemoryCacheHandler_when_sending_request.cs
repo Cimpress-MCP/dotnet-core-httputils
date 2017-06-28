@@ -36,7 +36,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
 
             // execute twice
             await client.GetAsync("http://unittest");
-            cache.Remove(new Uri("http://unittest").ToString());
+            cache.Remove(HttpMethod.Get + new Uri("http://unittest").ToString());
             await client.GetAsync("http://unittest");
 
             // validate
@@ -76,7 +76,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
         }
         
         [Fact]
-        public async Task Only_caches_get_results()
+        public async Task Only_caches_get_and_head_results()
         {
             // setup
             var testMessageHandler = new TestMessageHandler();
@@ -93,6 +93,21 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
 
             // validate
             testMessageHandler.NumberOfCalls.Should().Be(6);
+        }
+
+        [Fact]
+        public async Task Caches_head_and_get_request_without_conflict()
+        {
+            var testMessageHandler = new TestMessageHandler();
+            var cache = new MemoryCache(new MemoryCacheOptions());
+            var client = new HttpClient(new InMemoryCacheHandler(testMessageHandler, null, null, cache));
+
+            // execute twice for different methods
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, "http://unittest"));
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://unittest"));
+
+            // validate
+            testMessageHandler.NumberOfCalls.Should().Be(2);
         }
         
         [Fact]
