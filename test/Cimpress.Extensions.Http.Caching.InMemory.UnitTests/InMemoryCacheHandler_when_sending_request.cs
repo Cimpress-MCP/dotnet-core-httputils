@@ -162,5 +162,46 @@ namespace Cimpress.Extensions.Http.Caching.InMemory.UnitTests
             // validate
             testMessageHandler.NumberOfCalls.Should().Be(2);
         }
+
+        [Fact]
+        public async Task Invalidates_cache_correctly()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var handler = new InMemoryCacheHandler(testMessageHandler);
+            var client = new HttpClient(handler);
+
+            // execute twice, with cache invalidation in between
+            var uri = new Uri("http://unittest");
+            await client.GetAsync(uri);
+            handler.InvalidateCache(uri);
+            await client.GetAsync(uri);
+
+            // validate
+            testMessageHandler.NumberOfCalls.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task Invalidates_cache_per_method()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var handler = new InMemoryCacheHandler(testMessageHandler);
+            var client = new HttpClient(handler);
+
+            // execute with two methods, and clean up one cache
+            var uri = new Uri("http://unittest");
+            await client.GetAsync(uri);
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, uri));
+            testMessageHandler.NumberOfCalls.Should().Be(2);
+            
+            // clean cache
+            handler.InvalidateCache(uri, HttpMethod.Head);
+
+            // execute both actions, and only one should be retrieved from cache
+            await client.GetAsync(uri);
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, uri));
+            testMessageHandler.NumberOfCalls.Should().Be(3);
+        }
     }
 }

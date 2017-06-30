@@ -144,9 +144,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(null);
             cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
 
-            var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan>();
+            var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan> {{(HttpStatusCode) 200, TimeSpan.FromSeconds(0)}};
 
-            cacheExpirationPerStatusCode.Add((HttpStatusCode)200, TimeSpan.FromSeconds(0));
 
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, cacheExpirationPerStatusCode, cache.Object));
 
@@ -157,6 +156,60 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // validate
             testMessageHandler.NumberOfCalls.Should().Be(2);
             cache.Verify(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Exactly(0));
+        }
+        
+        [Fact]
+        public async Task Invalidates_cache_correctly()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
+            var url = "http://unittest/";
+            var key = HttpMethod.Get + url;
+            var cacheResult = new CacheData(new byte[0], new HttpResponseMessage(HttpStatusCode.OK), null, null).Serialize();
+            var nonCacheResult = default(byte[]);
+            var currentResult = nonCacheResult;
+            cache.Setup(c => c.GetAsync(key)).ReturnsAsync(currentResult);
+            cache.Setup(c => c.RemoveAsync(key)).Returns(Task.FromResult(true)).Callback(() => currentResult = nonCacheResult);
+            cache.Setup(c => c.SetAsync(key, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true))
+                .Callback(() => currentResult = cacheResult);
+
+            var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan> {{(HttpStatusCode) 200, TimeSpan.FromHours(1)}};
+
+            var handler = new RedisCacheHandler(testMessageHandler, cacheExpirationPerStatusCode, cache.Object);
+            var client = new HttpClient(handler);
+
+            // execute twice, with cache invalidation in between
+            var uri = new Uri(url);
+            await client.GetAsync(uri);
+            await handler.InvalidateCache(uri, HttpMethod.Get);
+            await client.GetAsync(uri);
+
+            // validate
+            testMessageHandler.NumberOfCalls.Should().Be(2);
+        }
+
+        [Fact]
+        public void Invalidates_cache_per_method()
+        {
+            // setup
+            var testMessageHandler = new TestMessageHandler();
+            var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
+            var url = "http://unittest/";
+            var getKey = HttpMethod.Get + url;
+            var headKey = HttpMethod.Head + url;
+            cache.Setup(c => c.RemoveAsync(headKey)).Returns(Task.FromResult(true));
+            cache.Setup(c => c.RemoveAsync(getKey)).Throws<Exception>();
+
+            var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan> { { (HttpStatusCode)200, TimeSpan.FromHours(1) } };
+            var handler = new RedisCacheHandler(testMessageHandler, cacheExpirationPerStatusCode, cache.Object);
+
+            // execute
+            Func<Task> func = async () => await handler.InvalidateCache(new Uri(url), HttpMethod.Head);
+
+            // validate
+            func.ShouldNotThrow();
+            cache.Verify(c => c.RemoveAsync(headKey), Times.Once);
         }
     }
 }
