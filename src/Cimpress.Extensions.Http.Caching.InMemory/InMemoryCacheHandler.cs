@@ -42,6 +42,21 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
         }
 
         /// <summary>
+        /// Allows to invalidate the cache.
+        /// </summary>
+        /// <param name="uri">The URI to invalidate.</param>
+        /// <param name="method">An optional method to invalidate. If none is provided, the cache is cleaned for all methods.</param>
+        public void InvalidateCache(Uri uri, HttpMethod method = null)
+        {
+            var methods = method != null ? new[] {method} : new[] {HttpMethod.Get, HttpMethod.Head};
+            foreach (var m in methods)
+            {
+                var key = m + uri.ToString();
+                responseCache.Remove(key);
+            }
+        }
+
+        /// <summary>
         /// Tries to get the value from the cache, and only calls the delegating handler on cache misses.
         /// </summary>
         /// <returns>The HttpResponseMessage from cache, or a newly invoked one.</returns>
