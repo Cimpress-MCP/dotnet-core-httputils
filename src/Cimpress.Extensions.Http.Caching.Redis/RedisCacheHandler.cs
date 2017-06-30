@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -42,6 +43,20 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             this.StatsProvider = statsProvider ?? new StatsProvider(nameof(RedisCacheHandler));
             this.cacheExpirationPerHttpResponseCode = cacheExpirationPerHttpResponseCode ?? new Dictionary<HttpStatusCode, TimeSpan>();
             responseCache = cache;
+        }
+
+        /// <summary>
+        /// Allows to invalidate the cache.
+        /// </summary>
+        /// <param name="uri">The URI to invalidate.</param>
+        /// <param name="method">An optional method to invalidate. If none is provided, the cache is cleaned for all methods.</param>
+        public async Task InvalidateCache(Uri uri, HttpMethod method = null)
+        {
+            var methods = method != null ? new[] { method } : new[] { HttpMethod.Get, HttpMethod.Head };
+            var tasks = from m in methods
+                let key = m + uri.ToString()
+                select responseCache.RemoveAsync(key);
+            await Task.WhenAll(tasks);
         }
 
         /// <summary>
