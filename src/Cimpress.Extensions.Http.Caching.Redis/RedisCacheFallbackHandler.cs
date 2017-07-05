@@ -17,6 +17,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
         private readonly TimeSpan maxTimeout;
         private readonly TimeSpan cacheDuration;
         private readonly IDistributedCache responseCache;
+        internal const string CacheFallbackKeyPrefix = "cfb";
 
         /// <summary>
         /// Used for injecting an IMemoryCache for unit testing purposes.
@@ -58,7 +59,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
                 return await base.SendAsync(request, cancellationToken);
             }
 
-            var key = request.Method + request.RequestUri.ToString();
+            var key = CacheFallbackKeyPrefix + request.Method + request.RequestUri;
 
             // start 3 tasks
             var httpSendTask = base.SendAsync(request, cancellationToken);

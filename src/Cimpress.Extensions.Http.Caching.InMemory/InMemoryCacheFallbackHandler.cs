@@ -16,6 +16,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
         private readonly TimeSpan maxTimeout;
         private readonly TimeSpan cacheDuration;
         private readonly IMemoryCache responseCache;
+        internal const string CacheFallbackKeyPrefix = "cfb";
 
         /// <summary>
         /// Create a new InMemoryCacheHandler.
@@ -55,7 +56,7 @@ namespace Cimpress.Extensions.Http.Caching.InMemory
                 return await base.SendAsync(request, cancellationToken);
             }
 
-            var key = request.Method + request.RequestUri.ToString();
+            var key = CacheFallbackKeyPrefix + request.Method + request.RequestUri.ToString();
 
             // start 3 tasks
             var httpSendTask = base.SendAsync(request, cancellationToken);
