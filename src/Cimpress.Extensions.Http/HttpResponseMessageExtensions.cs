@@ -12,7 +12,7 @@ namespace Cimpress.Extensions.Http
             if (!message.IsSuccessStatusCode)
             {
                 var formattedMsg = await LogMessage(message, logger);
-                throw new Exception(formattedMsg);
+                throw new NotSuccessHttpResponseException(formattedMsg);
             }
         }
 
@@ -29,7 +29,7 @@ namespace Cimpress.Extensions.Http
             if (!message.IsSuccessStatusCode)
             {
                 var formattedMsg = await FormatErrorMessage(message);
-                throw new Exception(formattedMsg);
+                throw new NotSuccessHttpResponseException(formattedMsg);
             }
         }
 
