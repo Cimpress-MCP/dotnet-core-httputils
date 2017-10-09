@@ -125,9 +125,9 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             {
                 cachedData.ContentHeaders["Content-Type"].ShouldAllBeEquivalentTo(expectedContentHeaders["Content-Type"]);
             }
-            cachedData.CachableResponse.StatusCode.Should().Be(expectedMessage.StatusCode);
-            cachedData.CachableResponse.ReasonPhrase.Should().Be(expectedMessage.ReasonPhrase);
-            cachedData.CachableResponse.Version.Should().Be(expectedMessage.Version);
+            cachedData.CachableResponse.StatusCode.Should().Be(expectedMessage.StatusCode, testName);
+            cachedData.CachableResponse.ReasonPhrase.Should().Be(expectedMessage.ReasonPhrase, testName);
+            cachedData.CachableResponse.Version.Should().Be(expectedMessage.Version, testName);
         }
 
         [Fact]
