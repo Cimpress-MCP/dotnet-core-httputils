@@ -5,7 +5,7 @@
     <AssemblyTitle>Unit tests for Cimpress.Extensions.Http.Caching.Redis</AssemblyTitle>
     <VersionPrefix>0.0.1</VersionPrefix>
     <Authors>Markus Thurner;Amanda Lobel</Authors>
-    <TargetFramework>netcoreapp1.5</TargetFramework>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>portable</DebugType>
     <AssemblyName>Cimpress.Extensions.Http.Caching.Redis.UnitTests</AssemblyName>
