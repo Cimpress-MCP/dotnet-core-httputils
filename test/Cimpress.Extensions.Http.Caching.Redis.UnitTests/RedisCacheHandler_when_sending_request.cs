@@ -29,7 +29,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.GetAsync(method + "http://unittest/")).ReturnsAsync(null);
+            cache.Setup(c => c.GetAsync(method + "http://unittest/")).ReturnsAsync(default(byte[]));
             cache.Setup(c => c.SetAsync(method + "http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
@@ -50,7 +50,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(null);
+            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(default(byte[]));
             cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
@@ -69,7 +69,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(null);
+            cache.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(default(byte[]));
             cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
@@ -141,7 +141,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
 
-            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(null);
+            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(default(byte[]));
             cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
 
             var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan> {{(HttpStatusCode) 200, TimeSpan.FromSeconds(0)}};
