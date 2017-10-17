@@ -102,19 +102,12 @@ namespace Cimpress.Extensions.Http.MessageHandlers
             string msg = $"Error returned when invoking URL '{request.RequestUri}' with HTTP status {response?.StatusCode}.";
             var content = await TryGetContent(response);
             msg += $"This is attempt #{attempt + 1}. Response content was: '{content}'.";
-            if (error)
-            {
-                logger.LogError(msg);
-            }
-            else
-            {
-                logger.LogWarning(msg);
-            }
+            logger.LogWarning(msg);
         }
 
         private void LogAttemptsExceeded(HttpRequestMessage request, HttpResponseMessage response, int attempt)
         {
-            logger?.LogError($"Maximum amount of {attempt + 1} attempts has been reached while invoking URL '{request.RequestUri}'. Returning the last response of status code {response?.StatusCode}.");
+            logger?.LogWarning($"Maximum amount of {attempt + 1} attempts has been reached while invoking URL '{request.RequestUri}'. Returning the last response of status code {response?.StatusCode}.");
         }
 
         private async Task<string> TryGetContent(HttpResponseMessage response)
