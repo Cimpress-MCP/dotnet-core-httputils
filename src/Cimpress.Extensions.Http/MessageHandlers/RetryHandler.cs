@@ -57,7 +57,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
                     }
                     
                     // log warnings unless it's the last attempt which is handled below
-                    await LogUnsuccessfulRequest(request, response, i, false);
+                    await LogUnsuccessfulRequest(request, response, i);
 
                     // abort immediately for client side errors and redirects, only retry on server side errors
                     if ((int) response.StatusCode <= 499)
@@ -92,7 +92,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
             }
         }
 
-        private async Task LogUnsuccessfulRequest(HttpRequestMessage request, HttpResponseMessage response, int attempt, bool error)
+        private async Task LogUnsuccessfulRequest(HttpRequestMessage request, HttpResponseMessage response, int attempt)
         {
             if (logger == null)
             {
