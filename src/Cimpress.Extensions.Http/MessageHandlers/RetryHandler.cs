@@ -57,7 +57,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
                     }
                     
                     // log warnings unless it's the last attempt which is handled below
-                    await LogUnsuccessfulRequest(request, response, i, false);
+                    await LogUnsuccessfulRequest(request, response, i);
 
                     // abort immediately for client side errors and redirects, only retry on server side errors
                     if ((int) response.StatusCode <= 499)
@@ -92,7 +92,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
             }
         }
 
-        private async Task LogUnsuccessfulRequest(HttpRequestMessage request, HttpResponseMessage response, int attempt, bool error)
+        private async Task LogUnsuccessfulRequest(HttpRequestMessage request, HttpResponseMessage response, int attempt)
         {
             if (logger == null)
             {
@@ -102,19 +102,12 @@ namespace Cimpress.Extensions.Http.MessageHandlers
             string msg = $"Error returned when invoking URL '{request.RequestUri}' with HTTP status {response?.StatusCode}.";
             var content = await TryGetContent(response);
             msg += $"This is attempt #{attempt + 1}. Response content was: '{content}'.";
-            if (error)
-            {
-                logger.LogError(msg);
-            }
-            else
-            {
-                logger.LogWarning(msg);
-            }
+            logger.LogWarning(msg);
         }
 
         private void LogAttemptsExceeded(HttpRequestMessage request, HttpResponseMessage response, int attempt)
         {
-            logger?.LogError($"Maximum amount of {attempt + 1} attempts has been reached while invoking URL '{request.RequestUri}'. Returning the last response of status code {response?.StatusCode}.");
+            logger?.LogWarning($"Maximum amount of {attempt + 1} attempts has been reached while invoking URL '{request.RequestUri}'. Returning the last response of status code {response?.StatusCode}.");
         }
 
         private async Task<string> TryGetContent(HttpResponseMessage response)
