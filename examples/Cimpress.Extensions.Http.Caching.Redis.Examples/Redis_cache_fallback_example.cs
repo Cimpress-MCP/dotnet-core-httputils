@@ -20,7 +20,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.Examples
 
             RedisCacheOptions options = new RedisCacheOptions
             {
-                Configuration = "localhost",
+                Configuration = "127.0.0.1",
                 InstanceName = "example-tests" + Guid.NewGuid() // create a new instance name to ensure a unique key naming to have consistent test results
             };
 
