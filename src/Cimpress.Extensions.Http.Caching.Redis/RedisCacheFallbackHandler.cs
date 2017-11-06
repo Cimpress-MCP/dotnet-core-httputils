@@ -3,8 +3,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Cimpress.Extensions.Http.Caching.Abstractions;
-using Cimpress.Extensions.Http.Caching.Redis.Microsoft;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Redis;
 
 namespace Cimpress.Extensions.Http.Caching.Redis
 {

@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Cimpress.Extensions.Http.Caching.Abstractions;
-using Cimpress.Extensions.Http.Caching.Redis.Microsoft;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Redis;
 using Xunit;
 
 namespace Cimpress.Extensions.Http.Caching.Redis.Examples

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
@@ -29,19 +30,19 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.GetAsync(method + "http://unittest/")).ReturnsAsync(default(byte[]));
-            cache.Setup(c => c.SetAsync(method + "http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
+            cache.Setup(c => c.GetAsync(method + "http://unittest/", default(CancellationToken))).ReturnsAsync(default(byte[]));
+            cache.Setup(c => c.SetAsync(method + "http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.CompletedTask);
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
             // execute twice
             await client.SendAsync(new HttpRequestMessage(method, "http://unittest"));
-            cache.Setup(c => c.GetAsync(method + "http://unittest/")).ReturnsAsync(new CacheData(new byte[0], new HttpResponseMessage(HttpStatusCode.OK), null, null).Serialize());
+            cache.Setup(c => c.GetAsync(method + "http://unittest/", default(CancellationToken))).ReturnsAsync(() => new CacheData(new byte[0], new HttpResponseMessage(HttpStatusCode.OK), null, null).Serialize());
             await client.SendAsync(new HttpRequestMessage(method, "http://unittest"));
 
             // validate
             testMessageHandler.NumberOfCalls.Should().Be(1);
-            cache.Verify(c => c.GetAsync(method + "http://unittest/"), Times.Exactly(2));
-            cache.Verify(c => c.SetAsync(method + "http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
+            cache.Verify(c => c.GetAsync(method + "http://unittest/", default(CancellationToken)), Times.Exactly(2));
+            cache.Verify(c => c.SetAsync(method + "http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Once);
         }
 
         [Theory, MemberData(nameof(GetHeadData))]
@@ -50,8 +51,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(default(byte[]));
-            cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
+            cache.Setup(c => c.GetAsync("http://unittest/", default(CancellationToken))).ReturnsAsync(default(byte[]));
+            cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.CompletedTask);
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
             // execute twice
@@ -60,7 +61,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             
             // validate
             testMessageHandler.NumberOfCalls.Should().Be(2);
-            cache.Verify(c => c.GetAsync(method + "http://unittest/"), Times.Exactly(2));
+            cache.Verify(c => c.GetAsync(method + "http://unittest/", default(CancellationToken)), Times.Exactly(2));
         }
 
         [Theory, MemberData(nameof(GetHeadData))]
@@ -69,8 +70,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(default(byte[]));
-            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
+            cache.Setup(c => c.GetAsync(It.IsAny<string>(), default(CancellationToken))).ReturnsAsync(default(byte[]));
+            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
             // execute for different URLs
@@ -79,7 +80,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
 
             // validate
             testMessageHandler.NumberOfCalls.Should().Be(2);
-            cache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Exactly(2));
+            cache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Exactly(2));
         }
         
         [Fact]
@@ -112,8 +113,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler = new TestMessageHandler(System.Net.HttpStatusCode.OK, expectedContent, expectedContentTypeHeader, expectedEtag);
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
             byte[] savedData = null;
-            cache.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(savedData);
-            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Callback((string key, byte[] data, DistributedCacheEntryOptions o) => savedData = data)
+            cache.Setup(c => c.GetAsync(It.IsAny<string>(), default(CancellationToken))).ReturnsAsync(savedData);
+            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Callback((string key, byte[] data, DistributedCacheEntryOptions o, CancellationToken token) => savedData = data)
                 .Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheHandler(testMessageHandler, new Dictionary<HttpStatusCode, TimeSpan>(), cache.Object));
 
@@ -141,8 +142,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
 
-            cache.Setup(c => c.GetAsync("http://unittest/")).ReturnsAsync(default(byte[]));
-            cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true));
+            cache.Setup(c => c.GetAsync("http://unittest/", default(CancellationToken))).ReturnsAsync(default(byte[]));
+            cache.Setup(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.FromResult(true));
 
             var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan> {{(HttpStatusCode) 200, TimeSpan.FromSeconds(0)}};
 
@@ -155,7 +156,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
 
             // validate
             testMessageHandler.NumberOfCalls.Should().Be(2);
-            cache.Verify(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Exactly(0));
+            cache.Verify(c => c.SetAsync("http://unittest/", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Exactly(0));
         }
         
         [Fact]
@@ -169,9 +170,9 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var cacheResult = new CacheData(new byte[0], new HttpResponseMessage(HttpStatusCode.OK), null, null).Serialize();
             var nonCacheResult = default(byte[]);
             var currentResult = nonCacheResult;
-            cache.Setup(c => c.GetAsync(key)).ReturnsAsync(currentResult);
-            cache.Setup(c => c.RemoveAsync(key)).Returns(Task.FromResult(true)).Callback(() => currentResult = nonCacheResult);
-            cache.Setup(c => c.SetAsync(key, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>())).Returns(Task.FromResult(true))
+            cache.Setup(c => c.GetAsync(key, default(CancellationToken))).ReturnsAsync(currentResult);
+            cache.Setup(c => c.RemoveAsync(key, default(CancellationToken))).Returns(Task.FromResult(true)).Callback(() => currentResult = nonCacheResult);
+            cache.Setup(c => c.SetAsync(key, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.FromResult(true))
                 .Callback(() => currentResult = cacheResult);
 
             var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan> {{(HttpStatusCode) 200, TimeSpan.FromHours(1)}};
@@ -198,8 +199,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var url = "http://unittest/";
             var getKey = HttpMethod.Get + url;
             var headKey = HttpMethod.Head + url;
-            cache.Setup(c => c.RemoveAsync(headKey)).Returns(Task.FromResult(true));
-            cache.Setup(c => c.RemoveAsync(getKey)).Throws<Exception>();
+            cache.Setup(c => c.RemoveAsync(headKey, default(CancellationToken))).Returns(Task.FromResult(true));
+            cache.Setup(c => c.RemoveAsync(getKey, default(CancellationToken))).Throws<Exception>();
 
             var cacheExpirationPerStatusCode = new Dictionary<HttpStatusCode, TimeSpan> { { (HttpStatusCode)200, TimeSpan.FromHours(1) } };
             var handler = new RedisCacheHandler(testMessageHandler, cacheExpirationPerStatusCode, cache.Object);
@@ -209,7 +210,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
 
             // validate
             func.ShouldNotThrow();
-            cache.Verify(c => c.RemoveAsync(headKey), Times.Once);
+            cache.Verify(c => c.RemoveAsync(headKey, default(CancellationToken)), Times.Once);
         }
     }
 }
