@@ -48,7 +48,7 @@ if(Test-Path .\artifacts) { Remove-Item .\artifacts -Force -Recurse }
 Get-ChildItem -Path .\src -Filter *.csproj -Recurse | ForEach-Object { Update-BuildVersion $_.FullName }
 
 # Package restore
-& dotnet restore --configfile ./nuget.config
+& dotnet restore
 
 # Build/package
 Get-ChildItem -Path .\src -Filter *.csproj -Recurse | ForEach-Object { Pack-Project $_.DirectoryName }
