@@ -30,12 +30,12 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             // setup
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.FromResult(true));
+            cache.Setup(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler, TimeSpan.FromDays(1), TimeSpan.FromDays(1), cache.Object));
 
             // execute twice
             await client.SendAsync(new HttpRequestMessage(method, url));
-            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Once); // ensure it's cached before the 2nd call
+            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()), Times.Once); // ensure it's cached before the 2nd call
             await client.SendAsync(new HttpRequestMessage(method, url));
 
             // validate
@@ -49,14 +49,14 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler = new TestMessageHandler();
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
             var cacheTime = TimeSpan.FromSeconds(123);
-            cache.Setup(c => c.SetAsync(method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.FromResult(true));
+            cache.Setup(c => c.SetAsync(method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(true));
             var client = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler, TimeSpan.FromDays(1), cacheTime, cache.Object));
 
             // execute twice, validate cache is called each time
             await client.SendAsync(new HttpRequestMessage(method, url));
-            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Once);
+            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             await client.SendAsync(new HttpRequestMessage(method, url));
-            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Exactly(2));
+            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Theory, MemberData(nameof(GetHeadData))]
@@ -66,7 +66,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler = new TestMessageHandler(HttpStatusCode.InternalServerError);
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
             var cacheTime = TimeSpan.FromSeconds(123);
-            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.FromResult(true));
+            cache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(true));
             cache.Setup(c => c.GetAsync(method + url, default(CancellationToken))).ReturnsAsync(default(byte[]));
             var client = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler, TimeSpan.FromDays(1), cacheTime, cache.Object));
 
@@ -74,7 +74,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             await client.SendAsync(new HttpRequestMessage(method, url));
 
             // validate
-            cache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Never);
+            cache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Theory, MemberData(nameof(GetHeadData))]
@@ -84,7 +84,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler = new TestMessageHandler(HttpStatusCode.InternalServerError);
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
             var cacheTime = TimeSpan.FromSeconds(123);
-            cache.Setup(c => c.GetAsync(method + url, default(CancellationToken))).ReturnsAsync(default(byte[]));
+            cache.Setup(c => c.GetAsync(method + url, It.IsAny<CancellationToken>())).ReturnsAsync(default(byte[]));
             var client = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler, TimeSpan.FromDays(1), cacheTime, cache.Object));
 
             // execute
@@ -101,13 +101,13 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler1 = new TestMessageHandler(content: "message-1", delay: TimeSpan.FromMilliseconds(100));
             var testMessageHandler2 = new TestMessageHandler(content: "message-2");
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.Setup(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken))).Returns(Task.FromResult(true));
+            cache.Setup(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(true));
             var client1 = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler1, TimeSpan.FromMilliseconds(1), TimeSpan.FromDays(1), cache.Object));
             var client2 = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler2, TimeSpan.FromMilliseconds(1), TimeSpan.FromDays(1), cache.Object));
 
             // execute twice
             var result1 = await client1.SendAsync(new HttpRequestMessage(method, url));
-            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default(CancellationToken)), Times.Once);
+            cache.Verify(c => c.SetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             var result2 = await client2.SendAsync(new HttpRequestMessage(method, url));
 
             // validate
@@ -133,7 +133,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis.UnitTests
             var testMessageHandler1 = new TestMessageHandler(HttpStatusCode.OK, "message-1");
             var testMessageHandler2 = new TestMessageHandler(HttpStatusCode.InternalServerError, "message-2");
             var cache = new Mock<IDistributedCache>(MockBehavior.Strict);
-            cache.SetupSequence(c => c.GetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, default(CancellationToken))).ReturnsAsync(default(byte[])).ReturnsAsync(serializedCacheEntry);
+            cache.SetupSequence(c => c.GetAsync(RedisCacheFallbackHandler.CacheFallbackKeyPrefix + method + url, It.IsAny<CancellationToken>())).ReturnsAsync(default(byte[])).ReturnsAsync(serializedCacheEntry);
             var client1 = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler1, TimeSpan.FromDays(1), TimeSpan.FromDays(1), cache.Object));
             var client2 = new HttpClient(new RedisCacheFallbackHandler(testMessageHandler2, TimeSpan.FromDays(1), TimeSpan.FromDays(1), cache.Object));
 
