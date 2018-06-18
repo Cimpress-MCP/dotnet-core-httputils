@@ -64,7 +64,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             // start 3 tasks
             var httpSendTask = base.SendAsync(request, cancellationToken);
             var timeoutTask = Task.Delay(maxTimeout, cancellationToken);
-            var cacheTask = responseCache.TryGetAsync(key);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var cacheTask = responseCache.TryGetAsync(key, cts.Token);
 
             // ensure the send task completes (or the timeout task, whatever comes first).
             var firstCompletedTask = await Task.WhenAny(httpSendTask, timeoutTask);
@@ -130,7 +131,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             if ((int)response.StatusCode < 500 && TimeSpan.Zero != cacheDuration)
             {
                 var entry = await response.ToCacheEntry();
-                await responseCache.TrySetAsync(key, entry, cacheDuration);
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await responseCache.TrySetAsync(key, entry, cacheDuration, cts.Token);
                 return entry;
             }
 

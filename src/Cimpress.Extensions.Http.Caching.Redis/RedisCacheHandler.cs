@@ -40,7 +40,7 @@ namespace Cimpress.Extensions.Http.Caching.Redis
         internal RedisCacheHandler(HttpMessageHandler innerHandler, IDictionary<HttpStatusCode, TimeSpan> cacheExpirationPerHttpResponseCode, IDistributedCache cache,
             IStatsProvider statsProvider = null) : base(innerHandler ?? new HttpClientHandler())
         {
-            this.StatsProvider = statsProvider ?? new StatsProvider(nameof(RedisCacheHandler));
+            StatsProvider = statsProvider ?? new StatsProvider(nameof(RedisCacheHandler));
             this.cacheExpirationPerHttpResponseCode = cacheExpirationPerHttpResponseCode ?? new Dictionary<HttpStatusCode, TimeSpan>();
             responseCache = cache;
         }
@@ -69,7 +69,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis
             // gets the data from cache, and returns the data if it's a cache hit
             if (request.Method == HttpMethod.Get || request.Method == HttpMethod.Head)
             {
-                var data = await responseCache.TryGetAsync(key);
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var data = await responseCache.TryGetAsync(key, cts.Token);
                 if (data != null)
                 {
                     var cachedResponse = request.PrepareCachedEntry(data);
@@ -91,7 +92,8 @@ namespace Cimpress.Extensions.Http.Caching.Redis
                 if (TimeSpan.Zero != absoluteExpirationRelativeToNow)
                 {
                     var entry = await response.ToCacheEntry();
-                    await responseCache.TrySetAsync(key, entry, absoluteExpirationRelativeToNow);
+                    var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    await responseCache.TrySetAsync(key, entry, absoluteExpirationRelativeToNow, cts.Token);
                     return request.PrepareCachedEntry(entry);
                 }
             }
