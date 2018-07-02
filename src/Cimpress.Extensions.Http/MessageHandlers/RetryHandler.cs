@@ -51,7 +51,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
                 {
                     response = await base.SendAsync(request, cancellationToken);
 
-                    if (response.IsSuccessStatusCode)
+                    if ((int) response.StatusCode <= 399)
                     {
                         return response;
                     }
