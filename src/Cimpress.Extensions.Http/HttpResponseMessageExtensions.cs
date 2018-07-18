@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -55,13 +54,14 @@ namespace Cimpress.Extensions.Http
         /// <summary>
         /// Logs a message using the injected logger.
         /// </summary>
-        /// <returns>Returns an awaitable Task.</returns>
         /// <param name="message">Extension on a HttpResponseMessage.</param>
+        /// <param name="logger">The logger to use logging this message to.</param>
+        /// <returns>Returns a formatted version of the log message.</returns>
         public static async Task<string> LogMessage(HttpResponseMessage message, ILogger logger)
         {
-            string formattedMsg = await message.FormatErrorMessage();
-            logger.LogError(formattedMsg);
-            return formattedMsg;
+            var content = await message.Content.ReadAsStringAsync();
+            logger.LogError("Error processing request: {StatusCode} {RequestUri} {Content}", message.StatusCode, message.RequestMessage.RequestUri, content);
+            return $"Error processing request. Status code was {message.StatusCode} when calling '{message.RequestMessage.RequestUri}', message was '{content}'";
         }
 
         public static async Task<string> FormatErrorMessage(this HttpResponseMessage message)
