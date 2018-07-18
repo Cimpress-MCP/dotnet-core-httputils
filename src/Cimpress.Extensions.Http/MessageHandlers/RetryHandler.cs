@@ -15,7 +15,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
         private readonly uint maxRetries;
         private readonly uint retryDelayMilliseconds;
         private readonly ILogger logger;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RetryHandler" /> class.
         /// </summary>
@@ -55,7 +55,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
                     {
                         return response;
                     }
-                    
+
                     // log warnings unless it's the last attempt which is handled below
                     await LogUnsuccessfulRequest(request, response, i);
 
@@ -77,7 +77,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
                 }
 
                 // extend retry interval with every loop (start with configured delay)
-                await Task.Delay((int)(retryDelayMilliseconds * (i + 1)), cancellationToken);
+                await Task.Delay((int) (retryDelayMilliseconds * (i + 1)), cancellationToken);
             }
 
             return response;
@@ -87,8 +87,8 @@ namespace Cimpress.Extensions.Http.MessageHandlers
         {
             if (logger != null)
             {
-                string msg = $"Unexpected exception invoking REST service at {request.RequestUri}. This is attempt #{attempt + 1}.";
-                logger.LogWarning(0, sendException, msg);
+                const string msg = "Unexpected exception invoking {RequestUri}. This is #{Attempt}.";
+                logger.LogWarning(0, sendException, msg, request.RequestUri, attempt + 1);
             }
         }
 
@@ -99,15 +99,15 @@ namespace Cimpress.Extensions.Http.MessageHandlers
                 return;
             }
 
-            string msg = $"Error returned when invoking URL '{request.RequestUri}' with HTTP status {response?.StatusCode}.";
             var content = await TryGetContent(response);
-            msg += $"This is attempt #{attempt + 1}. Response content was: '{content}'.";
-            logger.LogWarning(msg);
+            const string msg = "Error returned when invoking {RequestUri} - {StatusCode} - #{Attempt} - {Content}. ";
+            logger.LogWarning(msg, request.RequestUri, response?.StatusCode, attempt + 1, content);
         }
 
         private void LogAttemptsExceeded(HttpRequestMessage request, HttpResponseMessage response, int attempt)
         {
-            logger?.LogWarning($"Maximum amount of {attempt + 1} attempts has been reached while invoking URL '{request.RequestUri}'. Returning the last response of status code {response?.StatusCode}.");
+            const string msg  = "Maximum {Attempts} reached while invoking {RequestUri}. Returning last response {StatusCode}.";
+            logger?.LogWarning(msg, attempt + 1, request.RequestUri, response?.StatusCode);
         }
 
         private async Task<string> TryGetContent(HttpResponseMessage response)

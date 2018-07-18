@@ -41,7 +41,7 @@ namespace Cimpress.Extensions.Http
                 }
                 catch (Exception ex)
                 {
-                    logger.LogInformation(0, ex, "Error while downloading resource");
+                    logger.LogInformation(0, ex, "Error while downloading resource at {URL}", url);
                 }
             }
 
