@@ -100,7 +100,7 @@ namespace Cimpress.Extensions.Http.MessageHandlers
             }
 
             var content = await TryGetContent(response);
-            const string msg = "Error returned when invoking {RequestUri} - {StatusCode} - #{Attempt} - {Content}. ";
+            const string msg = "Error returned when invoking {RequestUri} - {StatusCode} - #{Attempt} - {Content}.";
             logger.LogWarning(msg, request.RequestUri, response?.StatusCode, attempt + 1, content);
         }
 
