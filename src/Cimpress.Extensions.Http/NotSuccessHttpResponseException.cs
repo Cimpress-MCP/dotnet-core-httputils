@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Net;
 
 namespace Cimpress.Extensions.Http
 {
     public class NotSuccessHttpResponseException : Exception
     {
-        public NotSuccessHttpResponseException(string message) : base(message) {}
+        HttpStatusCode StatusCode { get; }
+
+        public NotSuccessHttpResponseException(string message, HttpStatusCode statusCode) : base(message)
+        {
+            StatusCode = statusCode;
+        }
     }
 }
